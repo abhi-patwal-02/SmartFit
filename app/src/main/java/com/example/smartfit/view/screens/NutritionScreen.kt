@@ -1,7 +1,8 @@
 package com.example.smartfit.view.screens
 
-import android.R
+import com.example.smartfit.R
 import android.graphics.Paint
+import android.health.connect.datatypes.NutritionRecord
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -87,7 +90,55 @@ fun NutritionScreen(){
                 }
             }
             SearchBar()
+
+            NutritionRecord()
         }
+    }
+}
+
+@Composable
+fun NutritionRecord(){
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(Color(0xFF1C202A))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .padding(16.dp)) {
+            Text(
+                text = "Today's Meals",
+                fontSize = 22.sp,
+                color = Color(0xFFFAFAFA),
+                modifier = Modifier
+            )
+            NutritionRecordItem()
+        }
+    }
+}
+
+@Composable
+fun NutritionRecordItem(){
+    Row(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF151820)),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp)) {
+            Text(
+                text = "Chicken Breast",
+                color = Color(0xFFFAFAFA)
+            )
+            Text(text = "165 cal • P: 31g • C: 0g • F: 3.6g", color = Color(0xFFA6A6A6))
+        }
+        Image(painter = painterResource(R.drawable.outline_delete_24), contentDescription = "Delete",
+            modifier = Modifier.padding(end = 12.dp))
+
     }
 }
 
@@ -96,16 +147,30 @@ fun SearchBar(){
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(Color(0xFF1C202A))
     ) {
         Column(
             modifier = Modifier
+                .padding(16.dp)
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
                 .background(Color(0xFF151820)),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Center
         ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = R.drawable.baseline_search_24),
+                    contentDescription = "Search",
+                    modifier = Modifier
+                        .padding(all = 4.dp)
+                )
+                Text(
+                    text = "Add food",
+                    color = Color(0xFFA6A6A6)
+                    )
+            }
 
         }
     }
