@@ -1,5 +1,6 @@
 package com.example.smartfit.view.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -53,50 +55,156 @@ fun ProfileScreen(){
             ProfileCard()
 
             Row {
-                FCard(
-                    painter = painterResource(R.drawable.flame_svgrepo_com),
-                    contentDescription = "Calories",
-                    maxValue = 2200f,
-                    value = 1847f,
-                    unit = " Kcal",
+                ProfileMiniCard(
                     modifier = Modifier
                         .weight(weight = 1f)
-                        .padding(end = 4.dp)
+                        .padding(end = 4.dp),
+                    painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
+                    text1 = "Current Weight",
+                    text2 = "75"
                 )
-                FCard(
+
+                ProfileMiniCard(
+                    modifier = Modifier
+                        .weight(weight = 1f).padding(start = 4.dp),
                     painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
-                    contentDescription = "Protein",
-                    maxValue = 150f,
-                    value = 128f,
-                    unit = " g",
+                    text1 = "Goal",
+                    text2 = "78"
+                )
+            }
+            Row {
+                ProfileMiniCard(
                     modifier = Modifier
                         .weight(weight = 1f)
-                        .padding(start = 4.dp)
+                        .padding(end = 4.dp),
+                    painter = painterResource(R.drawable.calendar_svgrepo_com),
+                    text1 = "Total Workouts",
+                    text2 = "47"
+                )
+
+                ProfileMiniCard(
+                    modifier = Modifier
+                        .weight(weight = 1f).padding(start = 4.dp),
+                    painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
+                    text1 = "Calories Burned",
+                    text2 = "12306"
                 )
             }
 
-            Row {
-                FCard(
-                    painter = painterResource(R.drawable.heartbeat_svgrepo_com),
-                    contentDescription = "Workouts",
-                    maxValue = 5f,
-                    value = 4f,
-                    unit = "",
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(end = 4.dp)
-                )
-                FCard(
-                    painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
-                    contentDescription = "Weight",
-                    maxValue = 80f,
-                    value = 75f,
-                    unit = " kg",
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(start = 4.dp)
+            SettingsCard()
+
+            //Sign Out Button
+            Button(
+                onClick = {},
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0x00000000)),
+                border = BorderStroke(2.dp, Color(0xFFEF433C)),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
+                Text(
+                    text = "Sign Out",
+                    color = Color(0xFFEF433C)
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun SettingsCard(){
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Settings",
+                fontSize = 22.sp,
+                color = Color(0xFFFAFAFA),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F131A)),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+                ) {
+                Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth()) {
+                    Text("Notification Preferences")
+                }
+            }
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F131A)),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth()) {
+                    Text("Units and Measurements")
+                }
+            }
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F131A)),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth()) {
+                    Text("Privacy and Security")
+                }
+            }
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F131A)),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth()) {
+                    Text("Help and Support")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfileMiniCard(
+    modifier: Modifier = Modifier,
+    painter: Painter,
+    text1: String,
+    text2: String
+){
+    Card(
+        modifier = modifier
+            .padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23)),
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(modifier = Modifier.padding(bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painter,
+                    contentDescription = "card icon",
+                    modifier = Modifier.size(20.dp),
+                    tint = Color(0xFFFF7043)
+                )
+                Text(
+                    text = text1,
+                    color = Color(0xFFFAFAFA),
+                    modifier = Modifier.padding(start = 4.dp),
+                    fontSize = 12.sp
+                )
+            }
+            Text(
+                text = text2,
+                color = Color(0xFFFAFAFA),
+                fontSize = 20.sp
+            )
         }
     }
 }
