@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    // Add the Crashlytics Gradle plugin
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -62,6 +64,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // ✅ Import the Firebase BoM (manages versions automatically)
     implementation(platform(libs.firebase.bom))
@@ -89,6 +92,7 @@ dependencies {
 
 // 🧩 Crashlytics (optional, for crash reports)
     implementation(libs.firebase.crashlytics.ktx)
+    implementation(libs.google.firebase.crashlytics.ktx)
 
 // 🧠 Performance Monitoring (optional)
     implementation(libs.firebase.perf.ktx)
