@@ -61,4 +61,45 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+
+    // ✅ Import the Firebase BoM (manages versions automatically)
+    implementation(platform(libs.firebase.bom))
+
+// 🔐 Authentication
+    implementation(libs.firebase.auth.ktx)
+
+// 💾 Firestore Database
+    implementation(libs.firebase.firestore.ktx)
+
+// 📦 Realtime Database (if you might use it)
+    implementation(libs.firebase.database.ktx)
+
+// ☁️ Cloud Storage
+    implementation(libs.firebase.storage.ktx)
+
+// 🔔 Cloud Messaging (Push Notifications)
+    implementation(libs.firebase.messaging.ktx)
+
+// 📈 Analytics (optional but helpful)
+    implementation(libs.firebase.analytics.ktx)
+
+// 🧠 Remote Config (optional)
+    implementation(libs.firebase.config.ktx)
+
+// 🧩 Crashlytics (optional, for crash reports)
+    implementation(libs.firebase.crashlytics.ktx)
+
+// 🧠 Performance Monitoring (optional)
+    implementation(libs.firebase.perf.ktx)
+
+// 🔑 App Check (optional, for security)
+    implementation(libs.firebase.appcheck.ktx)
+
+// 🧭 Dynamic Links (optional)
+    implementation(libs.firebase.dynamic.links.ktx)
+
+// 🔥 Installations API (used internally, but okay to add)
+    implementation(libs.firebase.installations.ktx)
+
 }
