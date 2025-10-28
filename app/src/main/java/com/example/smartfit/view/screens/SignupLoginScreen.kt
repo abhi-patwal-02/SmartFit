@@ -18,6 +18,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smartfit.R
+import com.example.smartfit.viewModel.AuthViewModel
 
 private var signinBtn: Boolean = true
 private var signupBtn: Boolean = false
@@ -37,7 +42,10 @@ private var pass: String = ""
 
 
 @Composable
-fun SignupLoginScreen(){
+fun SignupLoginScreen(authViewModel: AuthViewModel?){
+    var signinBtn by remember { mutableStateOf(true) }
+    var mail by remember { mutableStateOf("") }
+    var pass by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .background(Color(0xFF0F131A))
@@ -48,14 +56,36 @@ fun SignupLoginScreen(){
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CustomSignupLoginCard()
+            CustomSignupLoginCard(
+                signinBtn = signinBtn,
+                onToggleSignInSignUp = { signinBtn = !signinBtn },
+                mail = mail,
+                onMailChange = { mail = it },
+                pass = pass,
+                onPassChange = { pass = it },
+                onButtonClick = {
+                    if (signinBtn) {
+                        authViewModel?.login(mail.trim(), pass)
+                    } else {
+                        authViewModel?.signUp(mail.trim(), pass)
+                    }
+                }
+            )
         }
 
     }
 }
 
 @Composable
-fun CustomSignupLoginCard(){
+fun CustomSignupLoginCard(
+    signinBtn: Boolean,
+    onToggleSignInSignUp: () -> Unit,
+    mail: String,
+    onMailChange: (String) -> Unit,
+    pass: String,
+    onPassChange: (String) -> Unit,
+    onButtonClick: () -> Unit,
+){
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23))
     ) {
@@ -91,7 +121,7 @@ fun CustomSignupLoginCard(){
                     .fillMaxWidth()
             ) {
                 Button(
-                    onClick = {},
+                    onClick = onToggleSignInSignUp,
                     modifier = Modifier.padding(4.dp).fillMaxWidth(0.5f),
                     contentPadding = PaddingValues(vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -101,7 +131,7 @@ fun CustomSignupLoginCard(){
                     Text("Sign In", fontSize = 12.sp)
                 }
                 Button(
-                    onClick = {},
+                    onClick = onToggleSignInSignUp,
                     modifier = Modifier.padding(4.dp).fillMaxWidth(1f),
                     contentPadding = PaddingValues(vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -119,7 +149,7 @@ fun CustomSignupLoginCard(){
                     modifier = Modifier.padding(vertical = 8.dp))
                 CustomTextField(
                     value = mail,
-                    onValueChange = {mail = it},
+                    onValueChange = onMailChange,
                     placeholder = "you@example.com"
                 )
 
@@ -129,13 +159,13 @@ fun CustomSignupLoginCard(){
                     modifier = Modifier.padding(vertical = 8.dp))
                 CustomTextField(
                     value = pass,
-                    onValueChange = {pass = it},
+                    onValueChange = onPassChange,
                     placeholder = "********"
                 )
             }
 
             Button(
-                onClick = {},
+                onClick = onButtonClick,
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043)),
                 shape = RoundedCornerShape(12.dp)
@@ -153,5 +183,5 @@ fun CustomSignupLoginCard(){
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SignupLoginScreenPreview(){
-    SignupLoginScreen()
+    SignupLoginScreen(authViewModel = null)
 }
