@@ -32,13 +32,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smartfit.R
+import com.example.smartfit.view.components.CustomTextField
 import com.example.smartfit.viewModel.AuthViewModel
 
-private var signinBtn: Boolean = true
-private var signupBtn: Boolean = false
-
-private var mail: String = ""
-private var pass: String = ""
 
 
 @Composable

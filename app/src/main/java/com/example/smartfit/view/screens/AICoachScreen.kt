@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smartfit.R
+import com.example.smartfit.view.components.CustomTextField
 
 @Composable
 fun AICoachScreen(){
@@ -63,8 +64,10 @@ fun AICoachScreen(){
 @Composable
 fun AIChatbot(){
     Card(
-        modifier = Modifier.fillMaxSize().padding(vertical = 8.dp).border(1.dp, Color(0xFF232631),
-            RoundedCornerShape(12.dp)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .border(1.dp, Color(0xFF232631), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1C202A))
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -81,36 +84,43 @@ fun AIChatbot(){
                     color = Color(0xFFFAFAFA),
                     modifier = Modifier.padding(horizontal = 4.dp))
             }
-        }
+            //Chat
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = true)
+                    .fillMaxWidth()
+                    .border(
+                        1.dp,
+                        Color(0xFF232631),
+                        shape = RoundedCornerShape(0.dp)
+                    )
+            ) {  }
 
-        //Chat
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.9f)
-            .border(1.dp, Color(0xFF232631), shape = RoundedCornerShape(0.dp))) {  }
+            var userQuery by remember { mutableStateOf("") }
 
-        var userQuery by remember { mutableStateOf("") }
-
-        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            CustomTextField(
-                value = userQuery,
-                onValueChange = {userQuery = it},
-                modifier = Modifier.fillMaxWidth(0.85f)
-            )
-            Button(
-                onClick = {},
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.padding(start = 8.dp),
-                contentPadding = PaddingValues(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043))
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.send_svgrepo_com),
-                    contentDescription = "Send Button",
-                    tint = Color(0xFFFAFAFA)
+            Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                CustomTextField(
+                    value = userQuery,
+                    onValueChange = {userQuery = it},
+                    modifier = Modifier.fillMaxWidth(0.85f)
                 )
+                Button(
+                    onClick = {},
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.padding(start = 8.dp),
+                    contentPadding = PaddingValues(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043))
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.send_svgrepo_com),
+                        contentDescription = "Send Button",
+                        tint = Color(0xFFFAFAFA)
+                    )
+                }
             }
         }
+
+
 
     }
 }

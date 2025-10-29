@@ -30,15 +30,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartfit.R
-
-
-private var currWt: String = ""
-private var targetWt: String = ""
-private var height: String = ""
+import com.example.smartfit.view.components.CustomTextField
+import com.example.smartfit.viewModel.OnboardingViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun OnBoardingScreen() {
+fun OnBoardingScreen(
+    onboardingViewModel: OnboardingViewModel = viewModel(),
+    onComplete: () -> Unit
+
+) {
+
+    var currWt by remember { mutableStateOf("") }
+    var targetWt by remember { mutableStateOf("") }
+    var height by remember { mutableStateOf("") }
+    var selectedGoal by remember { mutableStateOf("Lose Weight") }
+
+    // Define save function here
+    val saveOnboardingDetails = let@{
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@let
+        onboardingViewModel.saveOnboardingDetails(
+            uid = uid,
+            currWt = currWt,
+            targetWt = targetWt,
+            height = height,
+            goal = selectedGoal,
+            onComplete = onComplete // Invoke when save finishes successfully
+        )
+    }
+
     Column(
         modifier = Modifier.background(Color(0xFF0F131A))
     ) {
@@ -49,13 +71,33 @@ fun OnBoardingScreen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OnBoardingCard()
+            OnBoardingCard(
+                currWt = currWt,
+                onCurrWtChange = {currWt = it},
+                targetWt = targetWt,
+                onTargetWtChange = {targetWt = it},
+                height = height,
+                onHeightChange = {height = it},
+                selectedGoal = selectedGoal,
+                onSelectedGoalChange = {selectedGoal = it},
+                saveOnboardingDetails = saveOnboardingDetails
+            )
         }
     }
 }
 
 @Composable
-fun OnBoardingCard(){
+fun OnBoardingCard(
+    currWt: String,
+    onCurrWtChange: (String)-> Unit,
+    targetWt: String,
+    onTargetWtChange: (String)->Unit,
+    height: String,
+    onHeightChange: (String)->Unit,
+    selectedGoal: String,
+    onSelectedGoalChange: (String)->Unit,
+    saveOnboardingDetails: ()->Unit
+){
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23))
     ) {
@@ -93,7 +135,7 @@ fun OnBoardingCard(){
                 )
                 CustomTextField(
                     value = currWt,
-                    onValueChange = {currWt = it},
+                    onValueChange = onCurrWtChange,
                     placeholder = "70",
                 )
                 Text(
@@ -103,7 +145,7 @@ fun OnBoardingCard(){
                 )
                 CustomTextField(
                     value = targetWt,
-                    onValueChange = {targetWt = it},
+                    onValueChange = onTargetWtChange,
                     placeholder = "78"
                 )
                 Text(
@@ -113,7 +155,7 @@ fun OnBoardingCard(){
                 )
                 CustomTextField(
                     value = height,
-                    onValueChange = {height = it},
+                    onValueChange = onHeightChange,
                     placeholder = "185"
                 )
             }
@@ -126,17 +168,16 @@ fun OnBoardingCard(){
                     color = Color(0xFFFAFAFA),
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
-                var selectedGoal by remember { mutableStateOf("Lose Weight") }
 
                 RadioGroup(
                     selectedGoal = selectedGoal,
-                    onGoalSelected = { selectedGoal = it }
+                    onGoalSelected = onSelectedGoalChange
                 )
 
             }
 
             Button(
-                onClick = {},
+                onClick = saveOnboardingDetails,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043)),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
@@ -185,6 +226,6 @@ fun RadioGroup(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun OnBoardingScreenPreview(){
-    OnBoardingScreen()
+    OnBoardingScreen(onComplete = {})
 }
 

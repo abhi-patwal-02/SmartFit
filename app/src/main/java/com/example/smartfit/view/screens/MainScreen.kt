@@ -48,7 +48,7 @@ val navItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    var selectedIndex by remember { mutableStateOf(4) }
+    var selectedIndex by remember { mutableStateOf(3) }
 
     Column(modifier = Modifier.background(Color(0xFF181D25))) {
 
@@ -80,6 +80,7 @@ fun MainScreen() {
         Box(modifier = Modifier
             .weight(1f)
             .verticalScroll(rememberScrollState())
+            .background(Color(0xFF0F131A))
         ) {
             when (selectedIndex) {
                 0 -> DashboardScreen()     // ✅ Calls another composable

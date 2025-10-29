@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smartfit.R
+import com.example.smartfit.view.components.CustomTextField
 
 @Composable
 fun ExerciseScreen(){
@@ -182,64 +183,6 @@ fun AddExercise() {
 }
 
 
-@Composable
-fun CustomTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-        .border(
-            width = 2.dp,
-            color = Color(0xFF232631), // Light gray border, change as needed
-            shape = RoundedCornerShape(8.dp)
-        ),
-    image: Painter? = null,
-    placeholder: String = "",
-    backgroundColor: Color = Color(0xFF151820),
-    borderColor: Color = Color.Transparent,
-    cornerRadius: Int = 6,
-    fontSize: Int = 16,
-    padding: PaddingValues = PaddingValues(horizontal = 12.dp)
-) {
-
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .background(backgroundColor, RoundedCornerShape(cornerRadius.dp))
-                .border(1.dp, borderColor, RoundedCornerShape(cornerRadius.dp))
-                .height(40.dp)
-                .padding(padding),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (image != null) {
-                    androidx.compose.foundation.Image(
-                        painter = image,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .padding(end = 8.dp)
-                    )
-                }
-                BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    textStyle = TextStyle(color = Color.Black, fontSize = fontSize.sp),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    decorationBox = { innerTextField ->
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                color = Color(0xFFA6A6A6),
-                                fontSize = fontSize.sp
-                            )
-                        }
-                        innerTextField()
-                    }
-                )
-            }
-        }
-}
 
 @Composable
 fun GoTo3DModel(){
