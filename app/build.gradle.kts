@@ -106,4 +106,9 @@ dependencies {
 // 🔥 Installations API (used internally, but okay to add)
     implementation(libs.firebase.installations.ktx)
 
+    //Filament
+    implementation(libs.filament.android)
+    implementation(libs.filament.utils.android)
+    implementation(libs.gltfio.android)
+
 }
