@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smartfit.R
 import com.example.smartfit.ui.theme.SmartFitTheme
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 data class NavItem(val label: String, val icon: Int) // icon: drawable resource id
 
@@ -48,7 +51,7 @@ val navItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    var selectedIndex by remember { mutableStateOf(3) }
+    var selectedIndex by remember { mutableStateOf(0) }
 
     Column(modifier = Modifier.background(Color(0xFF181D25))) {
 
@@ -85,7 +88,7 @@ fun MainScreen() {
             when (selectedIndex) {
                 0 -> DashboardScreen()     // ✅ Calls another composable
                 1 -> NutritionScreen()
-                2 -> ExerciseScreen()
+                2 -> ExerciseNavHost()
                 3 -> AICoachScreen()
                 4 -> ProfileScreen()
             }
@@ -95,6 +98,27 @@ fun MainScreen() {
         CustomBottomNavBar(selectedIndex) { newIndex -> selectedIndex = newIndex }
     }
 }
+
+
+
+@Composable
+fun ExerciseNavHost() {
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "exercise_list") {
+        composable("exercise_list") {
+            ExerciseScreen(onNavigateToAnatomy = {
+                navController.navigate("anatomy")
+            })
+        }
+        composable("anatomy") {
+            AnatomyScreen(onBackNavigateToExercise = {
+                navController.navigate("exercise_list")
+            })
+        }
+    }
+}
+
 
 @Composable
 fun CustomBottomNavBar(

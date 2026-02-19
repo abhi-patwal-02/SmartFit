@@ -32,6 +32,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smartfit.R
+import com.example.smartfit.ui.theme.DDBlue
+import com.example.smartfit.ui.theme.Grey
+import com.example.smartfit.ui.theme.LGrey
+import com.example.smartfit.ui.theme.Orange
+import com.example.smartfit.ui.theme.WText
 import com.example.smartfit.view.components.CustomTextField
 import com.example.smartfit.viewModel.AuthViewModel
 
@@ -39,12 +44,13 @@ import com.example.smartfit.viewModel.AuthViewModel
 
 @Composable
 fun SignupLoginScreen(authViewModel: AuthViewModel?){
-    var signinBtn by remember { mutableStateOf(true) }
+    var signinBtn by remember { mutableStateOf(false) }
     var mail by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
-            .background(Color(0xFF0F131A))
+            .background(DDBlue)
     ) {
         Column(
             modifier = Modifier
@@ -53,6 +59,8 @@ fun SignupLoginScreen(authViewModel: AuthViewModel?){
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CustomSignupLoginCard(
+                name = name,
+                onNameChange = {name = it},
                 signinBtn = signinBtn,
                 onToggleSignInSignUp = { signinBtn = !signinBtn },
                 mail = mail,
@@ -63,17 +71,18 @@ fun SignupLoginScreen(authViewModel: AuthViewModel?){
                     if (signinBtn) {
                         authViewModel?.login(mail.trim(), pass)
                     } else {
-                        authViewModel?.signUp(mail.trim(), pass)
+                        authViewModel?.signUp(mail.trim(), pass, name.trim())
                     }
                 }
             )
         }
-
     }
 }
 
 @Composable
 fun CustomSignupLoginCard(
+    name: String,
+    onNameChange:(String)->Unit,
     signinBtn: Boolean,
     onToggleSignInSignUp: () -> Unit,
     mail: String,
@@ -83,7 +92,7 @@ fun CustomSignupLoginCard(
     onButtonClick: () -> Unit,
 ){
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23))
+        colors = CardDefaults.cardColors(containerColor = Grey)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -92,56 +101,73 @@ fun CustomSignupLoginCard(
             Column(
                 modifier = Modifier
                     .background(
-                        color = Color(0xFFFF7043),
-                        shape = RoundedCornerShape(50.dp))
+                        color = Orange,
+                        shape = RoundedCornerShape(50.dp)
+                    )
                     .padding(8.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.dumbell_svgrepo_com),
                     contentDescription = "logo",
-                    tint = Color(0xFFFAFAFA),
+                    tint = WText,
                     modifier = Modifier.size(30.dp)
                 )
             }
             Text(
                 text = "Welcome to SmartFit",
-                color = Color(0xFFFAFAFA),
+                color = WText,
                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             )
 
             Row(
                 modifier = Modifier.background(
-                    color = Color(0xFF2B303B),
+                    color = LGrey,
                     shape = RoundedCornerShape(12.dp)
                 )
                     .fillMaxWidth()
             ) {
                 Button(
                     onClick = onToggleSignInSignUp,
-                    modifier = Modifier.padding(4.dp).fillMaxWidth(0.5f),
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .fillMaxWidth(0.5f),
                     contentPadding = PaddingValues(vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if(signinBtn) Color(0xFF151820) else Color(0xFF2B303B)),
+                        containerColor = if(signinBtn) DDBlue else LGrey),
                     shape = RoundedCornerShape(12.dp)
                     ) {
-                    Text("Sign In", fontSize = 12.sp)
+                    Text("Sign In", fontSize = 12.sp, color = WText)
                 }
                 Button(
                     onClick = onToggleSignInSignUp,
-                    modifier = Modifier.padding(4.dp).fillMaxWidth(1f),
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .fillMaxWidth(1f),
                     contentPadding = PaddingValues(vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if(signinBtn) Color(0xFF2B303B) else Color(0xFF151820)),
+                        containerColor = if(signinBtn) LGrey else DDBlue),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Sign Up", fontSize = 12.sp)
+                    Text("Sign Up", fontSize = 12.sp, color = WText)
                 }
             }
             Column(
             ) {
+                if (!signinBtn) {
+                    Text(
+                        text = "Name",
+                        color = WText,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    CustomTextField(
+                        value = name,
+                        onValueChange = onNameChange,
+                        placeholder = "Your Name"
+                    )
+                }
                 Text(
                     text = "Email",
-                    color = Color(0xFFFAFAFA),
+                    color = WText,
                     modifier = Modifier.padding(vertical = 8.dp))
                 CustomTextField(
                     value = mail,
@@ -151,7 +177,7 @@ fun CustomSignupLoginCard(
 
                 Text(
                     text = "Password",
-                    color = Color(0xFFFAFAFA),
+                    color = WText,
                     modifier = Modifier.padding(vertical = 8.dp))
                 CustomTextField(
                     value = pass,
@@ -162,13 +188,15 @@ fun CustomSignupLoginCard(
 
             Button(
                 onClick = onButtonClick,
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Orange),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = if (signinBtn) "Sign In" else "Sign Up",
-                    color = Color(0xFFFAFAFA)
+                    color = WText
                 )
             }
 

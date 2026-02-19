@@ -1,5 +1,6 @@
 package com.example.smartfit.view.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -18,8 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.smartfit.ui.theme.GText
+import com.example.smartfit.ui.theme.WText
 
 @Composable
 fun CustomTextField(
@@ -51,7 +55,7 @@ fun CustomTextField(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (image != null) {
-                androidx.compose.foundation.Image(
+                Image(
                     painter = image,
                     contentDescription = null,
                     modifier = Modifier
@@ -62,14 +66,14 @@ fun CustomTextField(
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
-                textStyle = TextStyle(color = Color(0xFFFAFAFA), fontSize = fontSize.sp),
+                textStyle = TextStyle(color = WText, fontSize = fontSize.sp),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 decorationBox = { innerTextField ->
                     if (value.isEmpty()) {
                         Text(
                             text = placeholder,
-                            color = Color(0xFFA6A6A6),
+                            color = GText,
                             fontSize = fontSize.sp
                         )
                     }
@@ -78,4 +82,21 @@ fun CustomTextField(
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Preview(){
+    CustomTextField(
+        value = TODO(),
+        onValueChange = TODO(),
+        modifier = TODO(),
+        image = TODO(),
+        placeholder = TODO(),
+        backgroundColor = TODO(),
+        borderColor = TODO(),
+        cornerRadius = TODO(),
+        fontSize = TODO(),
+        padding = TODO()
+    )
 }

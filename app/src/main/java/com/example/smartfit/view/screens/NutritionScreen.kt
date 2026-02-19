@@ -3,10 +3,13 @@ package com.example.smartfit.view.screens
 import com.example.smartfit.R
 import android.graphics.Paint
 import android.health.connect.datatypes.NutritionRecord
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +28,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,9 +47,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.smartfit.model.FoodItem
+import com.example.smartfit.viewModel.FoodSearchViewModel
+import com.example.smartfit.viewModel.NutritionViewModel
 
 @Composable
-fun NutritionScreen(){
+fun NutritionScreen(
+    searchVM: FoodSearchViewModel = viewModel(),
+    nutritionVM: NutritionViewModel = viewModel()
+){
+    val foods by nutritionVM.foods.collectAsState()
+
+
     Column(modifier = Modifier.background(Color(0xFF0F131A))){
         Column(
             modifier = Modifier
@@ -94,40 +112,52 @@ fun NutritionScreen(){
                     }
                 }
             }
-            SearchBar()
+            SearchBar(
+                searchVM = searchVM,
+                onFoodSelected = { food ->
+                    nutritionVM.addFood(food)
+                }
+            )
 
-            NutritionRecord()
+
+            NutritionRecord(
+                foods = foods,
+                onDelete = { nutritionVM.deleteFood(it.docId) }
+            )
+
         }
     }
 }
 
 @Composable
-fun NutritionRecord(){
+fun NutritionRecord(
+    foods: List<FoodItem>,
+    onDelete: (FoodItem) -> Unit
+){
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(Color(0xFF1C202A))
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth()
-                .padding(16.dp)) {
-            Text(
-                text = "Today's Meals",
-                fontSize = 22.sp,
-                color = Color(0xFFFAFAFA),
-                modifier = Modifier
-            )
-            NutritionRecordItem()
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            Text("Today's Meals", fontSize = 22.sp, color = Color.White)
+
+            foods.forEach {
+                NutritionRecordItem(it, onDelete)
+            }
         }
     }
 }
 
+
 @Composable
-fun NutritionRecordItem(){
+fun NutritionRecordItem(
+    food: FoodItem,
+    onDelete: (FoodItem) -> Unit
+){
     Row(
         modifier = Modifier
-            .padding(16.dp)
+            .padding(top = 16.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF151820)),
@@ -136,52 +166,85 @@ fun NutritionRecordItem(){
     ) {
         Column(modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp)) {
             Text(
-                text = "Chicken Breast",
+                text = food.name,
                 color = Color(0xFFFAFAFA)
             )
-            Text(text = "165 cal • P: 31g • C: 0g • F: 3.6g", color = Color(0xFFA6A6A6))
+            Text(
+                text = "${food.calories} cal • P: ${food.protein}g • C: ${food.carbs}g • F: ${food.fat}g",
+                color = Color(0xFFA6A6A6)
+            )
         }
         Image(painter = painterResource(R.drawable.outline_delete_24), contentDescription = "Delete",
-            modifier = Modifier.padding(end = 12.dp))
+            modifier = Modifier.padding(end = 12.dp).clickable { onDelete(food) }
+        )
 
     }
 }
 
 @Composable
-fun SearchBar(){
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(Color(0xFF1C202A))
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .border(
-                    width = 2.dp,
-                    color = Color(0xFF232631), // Light gray border, change as needed
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .background(Color(0xFF151820)),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_search_24),
-                    contentDescription = "Search",
-                    modifier = Modifier
-                        .padding(all = 4.dp)
-                )
-                Text(
-                    text = "Add food",
-                    color = Color(0xFFA6A6A6)
-                    )
-            }
+fun SearchBar(
+    searchVM: FoodSearchViewModel,
+    onFoodSelected: (FoodItem) -> Unit
+) {
 
+    val query by searchVM.query.collectAsState()
+    val results by searchVM.results.collectAsState()
+
+    Column {
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            colors = CardDefaults.cardColors(Color(0xFF1C202A))
+        ) {
+
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(2.dp, Color(0xFF232631), RoundedCornerShape(8.dp))
+                    .background(Color(0xFF151820))
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
+            ) {
+
+                BasicTextField(
+                    value = query,
+                    onValueChange = { searchVM.onQueryChange(it) },
+                    textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
+                    decorationBox = { inner ->
+                        if (query.isEmpty()) {
+                            Text("Add food", color = Color(0xFFA6A6A6))
+                        }
+                        inner()
+                    }
+                )
+            }
+        }
+
+        // suggestions list
+        results.take(5).forEach { food ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp),
+                colors = CardDefaults.cardColors(Color(0xFF151820))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onFoodSelected(food)
+                            searchVM.onQueryChange("")
+                        }
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(food.name, color = Color.White)
+                    Text("${food.calories} kcal", color = Color.Gray)
+                }
+            }
         }
     }
 }
@@ -258,5 +321,5 @@ fun CircularStat(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun NutritionScreenPreview(){
-    NutritionScreen()
+    //NutritionScreen()
 }

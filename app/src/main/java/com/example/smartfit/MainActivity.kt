@@ -13,10 +13,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.smartfit.debug.ExerciseUploader
+import com.example.smartfit.debug.FoodUploader
 import com.example.smartfit.ui.theme.SmartFitTheme
 import com.example.smartfit.view.screens.DashboardScreen
 import com.example.smartfit.view.screens.LoadingScreen
@@ -27,22 +33,32 @@ import com.example.smartfit.view.screens.SplashScreen
 import com.example.smartfit.viewModel.AuthState
 import com.example.smartfit.viewModel.AuthViewModel
 import com.example.smartfit.viewModel.OnboardingViewModel
+import com.google.android.filament.utils.Utils
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+//        lifecycleScope.launch {
+//            ExerciseUploader.uploadExercises()
+//        }
+//        lifecycleScope.launch {
+//            FoodUploader.uploadFoods()
+//        }
+
+        Utils.init()
+
         setContent {
             SmartFitTheme {
-                // Obtain your AuthViewModel using viewModel()
+
                 val authViewModel: AuthViewModel = viewModel()
                 val onboardingViewModel: OnboardingViewModel = viewModel()
-                // Entry point for all authentication-based navigation
-                AuthGate(
-                    authViewModel = authViewModel,
-                    onboardingViewModel = onboardingViewModel
-                )
+
+                AuthGate(authViewModel, onboardingViewModel)
             }
         }
     }
@@ -55,42 +71,56 @@ fun AuthGate(
 ) {
     val authState by authViewModel.uiState.collectAsState()
     val onboardingComplete by onboardingViewModel.onboardingComplete.collectAsState()
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
     val context = LocalContext.current
 
-    // Ensure user login state is checked once!
+    var splashFinished by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         authViewModel.checkIfUserIsLoggedIn()
+        delay(1500)
+        splashFinished = true
     }
 
-    // After authentication success, check onboarding details
     LaunchedEffect(authState) {
-        if (authState is AuthState.Authenticated && uid != null) {
-            onboardingViewModel.checkOnboardingCompleted(uid)
-        }
-    }
-
-    if (authState is AuthState.Error) {
-        val errorMsg = (authState as AuthState.Error).message
-        LaunchedEffect(errorMsg) {
-            Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
-        }
-        SignupLoginScreen(authViewModel = authViewModel)
-    } else if (authState is AuthState.Loading) {
-        LoadingScreen()
-    } else if (authState is AuthState.Authenticated && !onboardingComplete) {
-        OnBoardingScreen(onComplete = {
-            // On save complete: update onboardingComplete to true so the next recomposition shows MainScreen
-            uid?.let{
+        if (authState is AuthState.Authenticated) {
+            FirebaseAuth.getInstance().currentUser?.uid?.let {
                 onboardingViewModel.checkOnboardingCompleted(it)
             }
-        })
-    } else if (authState is AuthState.Authenticated && onboardingComplete) {
-        MainScreen()
-    } else if (authState is AuthState.Unauthenticated) {
-        SignupLoginScreen(authViewModel = authViewModel)
-    } else if (authState == AuthState.Idle) {
-        SplashScreen()
+        }
     }
 
+    if (!splashFinished) {
+        SplashScreen()
+        return
+    }
+
+    when (authState) {
+
+        is AuthState.Error -> {
+            val errorMsg = (authState as AuthState.Error).message
+            LaunchedEffect(errorMsg) {
+                Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+                authViewModel.clearError()
+            }
+            SignupLoginScreen(authViewModel)
+        }
+
+        is AuthState.Loading -> LoadingScreen()
+
+        is AuthState.Authenticated -> {
+            if (!onboardingComplete) {
+                OnBoardingScreen(onComplete = {
+                    FirebaseAuth.getInstance().currentUser?.uid?.let {
+                        onboardingViewModel.checkOnboardingCompleted(it)
+                    }
+                })
+            } else {
+                MainScreen()
+            }
+        }
+
+        is AuthState.Unauthenticated -> SignupLoginScreen(authViewModel)
+
+        AuthState.Idle -> SplashScreen()
+    }
 }

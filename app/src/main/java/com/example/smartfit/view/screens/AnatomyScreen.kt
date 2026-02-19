@@ -2,57 +2,41 @@ package com.example.smartfit.view.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.example.smartfit.R
+import com.example.smartfit.model.*
+import com.example.smartfit.ui.theme.WText
+import com.example.smartfit.view.components.Model3DViewer
+import com.example.smartfit.view.components.destroyFilamentResources
+import com.example.smartfit.view.components.setExercise
 
 @Composable
-fun AnatomyScreen(){
-    var muscleSelected by remember { mutableStateOf("Chest") }
+fun AnatomyScreen(onBackNavigateToExercise: () -> Unit) {
 
-    Column(modifier = Modifier
-        .background(Color(0xFF0F131A))
-        .fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+    var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose { destroyFilamentResources() }
+    }
+
+    Column(
+        modifier = Modifier
+            .background(Color(0xFF0F131A))
+            .fillMaxSize()
+    ) {
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.Start
+                .padding(16.dp)
         ) {
 
             Row(
@@ -60,196 +44,184 @@ fun AnatomyScreen(){
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0x00000000)),
+                    onClick = {
+                        destroyFilamentResources()
+                        onBackNavigateToExercise()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     modifier = Modifier.size(30.dp),
                     contentPadding = PaddingValues(5.dp)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.back_svgrepo_com),
-                        contentDescription = "Back Button",
-                        tint = Color(0xFFFAFAFA)
+                        contentDescription = null,
+                        tint = Color.White
                     )
                 }
+
                 Text(
                     text = "3D Anatomy",
                     fontSize = 25.sp,
-                    color = Color(0xFFFAFAFA),
+                    color = Color.White,
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
-            AnatomyCard()
 
-            SelectMuscle()
+            SelectMuscle { exercise ->
+                selectedExercise = exercise
+                setExercise(exercise)   // 🔥 sends to filament
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            AnatomyCard(selectedExercise)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ShowSteps()
         }
     }
 }
 
 @Composable
-fun AnatomyCard(){
-
+fun AnatomyCard(exercise: Exercise?) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C202A)),
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(2.dp, Color(0xFF232631))
+    ) {
+        Model3DViewer(
+            modelPath = "models/FinalYr3dModel.glb",
+            exercise = exercise,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+        )
+    }
 }
 
 @Composable
-fun SelectMuscle() {
-    val musclesList: List<String> = listOf(
-        "Chest", "Back", "Shoulder", "Biceps", "Triceps", "Forearms",
-        "Core", "Legs", "Quads", "Lower Back", "Hamstrings"
-    )
-    val exerciseList: List<List<String>> = listOf(
-        listOf("Bench Press", "Chest Fly", "Push Up"),
-        listOf("Pull Up", "Deadlift", "Bent-over Row"),
-        listOf("Overhead Press", "Lateral Raise", "Front Raise"),
-        listOf("Bicep Curl", "Hammer Curl"),
-        listOf("Tricep Pushdown", "Dips"),
-        listOf("Wrist Curl", "Reverse Wrist Curl"),
-        listOf("Plank", "Russian Twist"),
-        listOf("Squats", "Lunge", "Leg Press"),
-        listOf("Leg Extension", "Step Up"),
-        listOf("Back Extension", "Good Morning"),
-        listOf("Leg Curl", "Glute Ham Raise")
+fun SelectMuscle(onExerciseSelected: (Exercise) -> Unit) {
+
+    val musclesList = listOf("Chest","Back","Shoulder","Biceps","Legs")
+
+    val exerciseList = listOf(
+        listOf("Push Up"),
+        listOf("Pull Up"),
+        listOf("Overhead Press"),
+        listOf("Bicep Curl","Hammer Curl"),
+        listOf("Squat")
     )
 
     var expandedMuscle by remember { mutableStateOf(false) }
-    var selectedMuscle by remember { mutableStateOf(musclesList.firstOrNull() ?: "") }
+    var selectedMuscle by remember { mutableStateOf("") }
 
     var expandedExercise by remember { mutableStateOf(false) }
-    // Initially set exercises based on the first muscle group
-    var exercisesForSelectedMuscle by remember { mutableStateOf(exerciseList.firstOrNull() ?: emptyList()) }
-    var selectedExercise by remember { mutableStateOf(exercisesForSelectedMuscle.firstOrNull() ?: "") }
+    var exercisesForSelectedMuscle by remember { mutableStateOf(emptyList<String>()) }
+    var selectedExerciseText by remember { mutableStateOf("") }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C202A))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C202A)),
+        border = BorderStroke(2.dp, Color(0xFF232631))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
 
-            Box(){
-                Column() {
-                    Text(
-                        text = "Select Muscle Group",
-                        fontSize = 25.sp,
-                        color = Color(0xFFFAFAFA),
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    OutlinedButton(
-                        onClick = { expandedMuscle = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF151820)),
-                        border = BorderStroke(2.dp, Color(0xFF232631))
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.CenterStart
-                        ){
-                            Text(if (selectedMuscle.isEmpty()) "Select Muscle" else selectedMuscle)
-                        }
+        Row(modifier = Modifier.padding(16.dp)) {
 
-                    }
-                    DropdownMenu(
-                        expanded = expandedMuscle,
-                        onDismissRequest = { expandedMuscle = false },
-                        modifier = Modifier
-                            .heightIn(min = 50.dp, max = 200.dp)
-                            .zIndex(1f)
-                    ) {
-                        musclesList.forEachIndexed { index, muscle ->
-                            DropdownMenuItem(
-                                text = { Text(muscle) },
-                                onClick = {
-                                    selectedMuscle = muscle
-                                    exercisesForSelectedMuscle = exerciseList.getOrNull(index) ?: emptyList()
-                                    selectedExercise = exercisesForSelectedMuscle.firstOrNull() ?: ""
-                                    expandedMuscle = false
-                                }
-                            )
-                        }
+            Column(modifier = Modifier.weight(1f)) {
+
+                Text("Muscle Group", color = Color.White)
+
+                OutlinedButton(
+                    onClick = { expandedMuscle = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF151820))
+                ) {
+                    Text(selectedMuscle.ifEmpty { "Select Muscle" }, color = WText)
+                }
+
+                DropdownMenu(
+                    expanded = expandedMuscle,
+                    onDismissRequest = { expandedMuscle = false }
+                ) {
+                    musclesList.forEachIndexed { index, muscle ->
+                        DropdownMenuItem(
+                            text = { Text(muscle) },
+                            onClick = {
+                                selectedMuscle = muscle
+                                exercisesForSelectedMuscle = exerciseList[index]
+                                expandedMuscle = false
+                            }
+                        )
                     }
                 }
             }
 
+            Spacer(modifier = Modifier.width(12.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Column(modifier = Modifier.weight(1f)) {
 
+                Text("Exercise", color = Color.White)
 
-            Box(){
-                Column() {
-                    Text(
-                        text = "Select Exercise",
-                        fontSize = 25.sp,
-                        color = Color(0xFFFAFAFA),
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    OutlinedButton(
-                        onClick = { expandedExercise = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF151820)),
-                        border = BorderStroke(2.dp, Color(0xFF232631))
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.CenterStart,
-                        ){
-                            Text(if (selectedExercise.isEmpty()) "Select Exercise" else selectedExercise)
-                        }
-
-                    }
-                    DropdownMenu(
-                        expanded = expandedExercise,
-                        onDismissRequest = { expandedExercise = false },
-                        modifier = Modifier
-                            .heightIn(min = 50.dp, max = 200.dp)
-                    ) {
-                        exercisesForSelectedMuscle.forEach { exercise ->
-                            DropdownMenuItem(
-                                text = { Text(exercise) },
-                                onClick = {
-                                    selectedExercise = exercise
-                                    expandedExercise = false
-                                }
-                            )
-                        }
-                    }
+                OutlinedButton(
+                    onClick = { expandedExercise = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF151820))
+                ) {
+                    Text(selectedExerciseText.ifEmpty { "Select Exercise" }, color = WText)
                 }
 
-            }
+                DropdownMenu(
+                    expanded = expandedExercise,
+                    onDismissRequest = { expandedExercise = false }
+                ) {
 
-        }
-    }
-}
+                    exercisesForSelectedMuscle.forEach { exerciseName ->
 
+                        DropdownMenuItem(
+                            text = { Text(exerciseName) },
+                            onClick = {
+                                selectedExerciseText = exerciseName
+                                expandedExercise = false
 
-@Composable
-fun SimpleDropdownMenu(options: List<String>, label: String = "Select") {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(options.firstOrNull() ?: "") }
+                                val exercise = when(exerciseName.lowercase()) {
 
-    Column {
-        OutlinedButton(onClick = { expanded = true }) {
-            Text(if (selectedOption.isEmpty()) label else selectedOption)
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        selectedOption = option
-                        expanded = false
+                                    "bicep curl","hammer curl" ->
+                                        Exercise(
+                                            type = ExerciseType.BICEP_CURL,
+                                            startPose = ExercisePoses.BICEP_CURL_START,
+                                            endPose = ExercisePoses.BICEP_CURL_PEAK
+                                        )
+
+                                    "squat" ->
+                                        Exercise(
+                                            type = ExerciseType.SQUAT,
+                                            startPose = ExercisePoses.SQUAT_STANDING,
+                                            endPose = ExercisePoses.SQUAT_BOTTOM
+                                        )
+
+                                    else -> null
+                                }
+
+                                exercise?.let { onExerciseSelected(it) }
+                            }
+                        )
                     }
-                )
+                }
             }
         }
     }
 }
 
-
-@Preview
 @Composable
-fun AnatomyScreenPreview(){
-    AnatomyScreen()
+fun ShowSteps() {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C202A)),
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(2.dp, Color(0xFF232631))
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) { }
+    }
 }

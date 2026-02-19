@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import com.example.smartfit.R
+import com.example.smartfit.ui.theme.Orange
+import com.example.smartfit.ui.theme.WText
 
 @Composable
 fun SplashScreen() {
@@ -59,7 +61,7 @@ fun SplashScreen() {
                     Text(
                         text = "FitTrack Pro",
                         fontSize = 30.sp,
-                        color = Color(0xFFFF7043),
+                        color = Orange,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
@@ -75,7 +77,7 @@ fun SplashScreen() {
 @Composable
 fun AnimatedDots(
     dotSize: Dp = 8.dp,
-    color: Color = Color(0xFFFF7043),
+    color: Color = Orange,
     distance: Dp = 10.dp,
     duration: Int = 600
 ) {
@@ -144,14 +146,14 @@ fun GlowingLogo() {
             modifier = Modifier
                 .size(80.dp)
                 .background(
-                    color = Color(0xFFFF7043),
+                    color = Orange,
                     shape = CircleShape
                 )
         ) {
             Icon(
                 painter = painterResource(R.drawable.dumbell_svgrepo_com),
                 contentDescription = null,
-                tint = Color.White,
+                tint = WText,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(44.dp)

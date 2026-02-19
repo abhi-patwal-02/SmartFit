@@ -18,6 +18,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,11 +32,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartfit.R
+import com.example.smartfit.ui.theme.Black
+import com.example.smartfit.ui.theme.DDBlue
+import com.example.smartfit.ui.theme.GText
+import com.example.smartfit.ui.theme.Grey
+import com.example.smartfit.ui.theme.Orange
+import com.example.smartfit.ui.theme.Red
+import com.example.smartfit.ui.theme.Transparent
+import com.example.smartfit.ui.theme.WText
+import com.example.smartfit.viewModel.AuthViewModel
+import com.example.smartfit.viewModel.OnboardingViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun ProfileScreen(){
-    Column(modifier = Modifier.background(Color(0xFF0F131A))) {
+fun ProfileScreen(
+    authViewModel: AuthViewModel = viewModel(),
+    onboardingViewModel: OnboardingViewModel = viewModel()
+){
+    val profile by onboardingViewModel.profileData.collectAsState()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+    LaunchedEffect(uid) {
+        uid?.let { onboardingViewModel.fetchProfile(it) }
+    }
+
+    Column(modifier = Modifier.background(DDBlue)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -43,16 +68,19 @@ fun ProfileScreen(){
         ) {
             Text(
                 text = "Profile",
-                color = Color(0xFFFAFAFA),
+                color = WText,
                 fontSize = 25.sp
             )
             Text(
                 text = "Your Fitness Journey",
-                color = Color(0xFFA6A6A6),
+                color = GText,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            ProfileCard()
+            ProfileCard(
+                email = profile?.email ?: "Loading...",
+                name = profile?.email?.substringBefore("@") ?: "User"
+            )
 
             Row {
                 ProfileMiniCard(
@@ -61,15 +89,16 @@ fun ProfileScreen(){
                         .padding(end = 4.dp),
                     painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
                     text1 = "Current Weight",
-                    text2 = "75"
+                    text2 = profile?.currentWeight ?: "-"
                 )
 
                 ProfileMiniCard(
                     modifier = Modifier
-                        .weight(weight = 1f).padding(start = 4.dp),
+                        .weight(weight = 1f)
+                        .padding(start = 4.dp),
                     painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
                     text1 = "Goal",
-                    text2 = "78"
+                    text2 = profile?.goal ?: "-"
                 )
             }
             Row {
@@ -84,7 +113,8 @@ fun ProfileScreen(){
 
                 ProfileMiniCard(
                     modifier = Modifier
-                        .weight(weight = 1f).padding(start = 4.dp),
+                        .weight(weight = 1f)
+                        .padding(start = 4.dp),
                     painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
                     text1 = "Calories Burned",
                     text2 = "12306"
@@ -95,15 +125,17 @@ fun ProfileScreen(){
 
             //Sign Out Button
             Button(
-                onClick = {},
+                onClick = {
+                    authViewModel.signOut()
+                },
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0x00000000)),
-                border = BorderStroke(2.dp, Color(0xFFEF433C)),
+                colors = ButtonDefaults.buttonColors(containerColor = Transparent),
+                border = BorderStroke(2.dp, Red),
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             ) {
                 Text(
                     text = "Sign Out",
-                    color = Color(0xFFEF433C)
+                    color = Red
                 )
             }
         }
@@ -116,7 +148,7 @@ fun SettingsCard(){
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23))
+        colors = CardDefaults.cardColors(containerColor = Grey)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -124,47 +156,65 @@ fun SettingsCard(){
             Text(
                 text = "Settings",
                 fontSize = 22.sp,
-                color = Color(0xFFFAFAFA),
+                color = WText,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             Button(
                 onClick = {},
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F131A)),
+                colors = ButtonDefaults.buttonColors(containerColor = DDBlue),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
                 ) {
-                Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth()) {
-                    Text("Notification Preferences")
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Notification Preferences",
+                        color = Color(0xFFFFFFFF)
+                    )
                 }
             }
             Button(
                 onClick = {},
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F131A)),
+                colors = ButtonDefaults.buttonColors(containerColor = DDBlue),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth()) {
-                    Text("Units and Measurements")
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Units and Measurements",
+                        color = Color(0xFFFFFFFF))
                 }
             }
             Button(
                 onClick = {},
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F131A)),
+                colors = ButtonDefaults.buttonColors(containerColor = DDBlue),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth()) {
-                    Text("Privacy and Security")
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Privacy and Security",
+                        color = Color(0xFFFFFFFF))
                 }
             }
             Button(
                 onClick = {},
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F131A)),
+                colors = ButtonDefaults.buttonColors(containerColor = DDBlue),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Row(horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth()) {
-                    Text("Help and Support")
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Help and Support",
+                        color = Color(0xFFFFFFFF))
                 }
             }
         }
@@ -182,7 +232,7 @@ fun ProfileMiniCard(
         modifier = modifier
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23)),
+        colors = CardDefaults.cardColors(containerColor = Grey),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(modifier = Modifier.padding(bottom = 4.dp),
@@ -191,18 +241,18 @@ fun ProfileMiniCard(
                     painter = painter,
                     contentDescription = "card icon",
                     modifier = Modifier.size(20.dp),
-                    tint = Color(0xFFFF7043)
+                    tint = Orange
                 )
                 Text(
                     text = text1,
-                    color = Color(0xFFFAFAFA),
+                    color = WText,
                     modifier = Modifier.padding(start = 4.dp),
                     fontSize = 12.sp
                 )
             }
             Text(
                 text = text2,
-                color = Color(0xFFFAFAFA),
+                color = WText,
                 fontSize = 20.sp
             )
         }
@@ -210,13 +260,16 @@ fun ProfileMiniCard(
 }
 
 @Composable
-fun ProfileCard(){
+fun ProfileCard(
+    name: String,
+    email: String
+){
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFF7043))
+        colors = CardDefaults.cardColors(containerColor = Orange)
     ) {
         Column(
             modifier = Modifier
@@ -235,13 +288,13 @@ fun ProfileCard(){
                         painter = painterResource(R.drawable.profile_1341_svgrepo_com),
                         contentDescription = "Profile Photo",
                         modifier = Modifier.size(30.dp),
-                        tint = Color(0xFFFAFAFA)
+                        tint = WText
                     )
                 }
                 Column(modifier = Modifier.padding(start = 8.dp)) {
                     Text(
-                        text = "John Doe",
-                        color = Color(0xFFFAFAFA),
+                        text = name,
+                        color = WText,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -250,11 +303,11 @@ fun ProfileCard(){
                             painter = painterResource(R.drawable.email_svgrepo_com),
                             modifier = Modifier.size(15.dp),
                             contentDescription = "Email Logo",
-                            tint = Color(0xFFFAFAFA)
+                            tint = WText
                         )
                         Text(
-                            text = "john.doe@example.com",
-                            color = Color(0xFFFAFAFA),
+                            text = email,
+                            color = WText,
                             modifier = Modifier.padding(start = 4.dp)
                         )
                     }
@@ -269,7 +322,7 @@ fun ProfileCard(){
             ) {
                 Text(
                     text = "Edit Profile",
-                    color = Color(0xFF000000)
+                    color = Black
                 )
             }
         }

@@ -49,17 +49,22 @@ fun OnBoardingScreen(
     var selectedGoal by remember { mutableStateOf("Lose Weight") }
 
     // Define save function here
-    val saveOnboardingDetails = let@{
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@let
-        onboardingViewModel.saveOnboardingDetails(
-            uid = uid,
-            currWt = currWt,
-            targetWt = targetWt,
-            height = height,
-            goal = selectedGoal,
-            onComplete = onComplete // Invoke when save finishes successfully
-        )
+    val saveOnboardingDetails = {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            onboardingViewModel.saveOnboardingDetails(
+                uid = uid,
+                currWt = currWt,
+                targetWt = targetWt,
+                height = height,
+                goal = selectedGoal,
+                onComplete = onComplete
+            )
+        }
+        println("SAVE CLICKED UID = $uid")
+
     }
+
 
     Column(
         modifier = Modifier.background(Color(0xFF0F131A))
@@ -109,7 +114,8 @@ fun OnBoardingCard(
                 modifier = Modifier
                     .background(
                         color = Color(0xFFFF7043),
-                        shape = RoundedCornerShape(50.dp))
+                        shape = RoundedCornerShape(50.dp)
+                    )
                     .padding(8.dp)
             ) {
                 Icon(
@@ -161,7 +167,9 @@ fun OnBoardingCard(
             }
 
             Column(
-                modifier = Modifier.padding(top = 20.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(top = 20.dp)
+                    .fillMaxWidth()
             ) {
                 Text(
                     text = "Fitness Goals",
@@ -177,10 +185,15 @@ fun OnBoardingCard(
             }
 
             Button(
-                onClick = saveOnboardingDetails,
+                onClick = {
+                    saveOnboardingDetails()
+
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043)),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
             ) {
                 Text(
                     text = "Complete Setup",
