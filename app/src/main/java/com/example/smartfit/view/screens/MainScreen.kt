@@ -82,7 +82,6 @@ fun MainScreen() {
         // Screen content area
         Box(modifier = Modifier
             .weight(1f)
-            .verticalScroll(rememberScrollState())
             .background(Color(0xFF0F131A))
         ) {
             when (selectedIndex) {

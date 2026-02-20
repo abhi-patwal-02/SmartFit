@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -67,27 +68,28 @@ fun ExerciseScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(16.dp)
         ) {
-
-            Text("Workout Tracker", fontSize = 25.sp, color = WText)
-            Text("Log your exercises and track progress", color = GText)
-
-            TodayProgressBar(1, 3)
-
-            GoTo3DModel(onNavigateToAnatomy)
-
-            AddExercise(
-                workoutVM = workoutVM,
-                searchVM = searchVM
-            )
-
-            ExerciseLogs(workouts)
+            item {
+                Text("Workout Tracker", fontSize = 25.sp, color = WText)
+                Text("Log your exercises and track progress", color = GText)
+            }
+            item {
+                TodayProgressBar(1, 3)
+            }
+            item {
+                GoTo3DModel(onNavigateToAnatomy)
+            }
+            item {
+                AddExercise(
+                    workoutVM = workoutVM,
+                    searchVM = searchVM
+                )
+            }
+            item {
+                ExerciseLogs(workouts)
+            }
         }
     }
 }

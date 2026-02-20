@@ -6,6 +6,7 @@ import android.view.SurfaceView
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -91,6 +92,8 @@ fun Model3DViewer(
     var pitch by remember { mutableStateOf(0f) }
     var scale by remember { mutableStateOf(0.5f) }
 
+
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -100,7 +103,7 @@ fun Model3DViewer(
                     pitch += pan.y * 0.5f
                     scale = (scale * zoom).coerceIn(0.2f, 5f)
                 }
-            }
+            },
     ) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),

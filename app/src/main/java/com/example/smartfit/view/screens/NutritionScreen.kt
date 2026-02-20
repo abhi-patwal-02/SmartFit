@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Card
@@ -61,71 +62,75 @@ fun NutritionScreen(
 
 
     Column(modifier = Modifier.background(Color(0xFF0F131A))){
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(all = 16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
-        ){
-            Text(
-                text = "Nutrition Tracker",
-                color = Color(0xFFFAFAFA),
-                fontSize = 25.sp
-            )
-            Text(
-                text = "Track your daily food intake",
-                color = Color(0xFFA6A6A6),
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                elevation = CardDefaults.cardElevation(8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFF7043)),
-            ){
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Today's Total",
-                        color = Color(0xFFFAFAFA),
-                        fontSize = 22.sp
-                    )
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        CircularStat(value = 381f, maxValue = 2000f, label = "Calories")
-                        CircularStat(value = 36f, maxValue = 150f, label = "Protein", unit = "g")
-                    }
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        CircularStat(value = 45f, maxValue = 250f, label = "Carbs", unit = "g")
-                        CircularStat(value = 5.4f, maxValue = 65f, label = "Fat", unit = "g")
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(16.dp)
+        ) {
+            item {
+                Text(
+                    text = "Nutrition Tracker",
+                    color = Color(0xFFFAFAFA),
+                    fontSize = 25.sp
+                )
+                Text(
+                    text = "Track your daily food intake",
+                    color = Color(0xFFA6A6A6),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    elevation = CardDefaults.cardElevation(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFF7043)),
+                ){
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Today's Total",
+                            color = Color(0xFFFAFAFA),
+                            fontSize = 22.sp
+                        )
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            CircularStat(value = 381f, maxValue = 2000f, label = "Calories")
+                            CircularStat(value = 36f, maxValue = 150f, label = "Protein", unit = "g")
+                        }
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            CircularStat(value = 45f, maxValue = 250f, label = "Carbs", unit = "g")
+                            CircularStat(value = 5.4f, maxValue = 65f, label = "Fat", unit = "g")
+                        }
                     }
                 }
             }
-            SearchBar(
-                searchVM = searchVM,
-                onFoodSelected = { food ->
-                    nutritionVM.addFood(food)
-                }
-            )
+            item {
+                SearchBar(
+                    searchVM = searchVM,
+                    onFoodSelected = { food ->
+                        nutritionVM.addFood(food)
+                    }
+                )
 
 
-            NutritionRecord(
-                foods = foods,
-                onDelete = { nutritionVM.deleteFood(it.docId) }
-            )
+            }
+            item {
 
+                NutritionRecord(
+                    foods = foods,
+                    onDelete = { nutritionVM.deleteFood(it.docId) }
+                )
+            }
         }
+
     }
 }
 
@@ -321,5 +326,5 @@ fun CircularStat(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun NutritionScreenPreview(){
-    //NutritionScreen()
+    NutritionScreen()
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -58,85 +59,88 @@ fun ProfileScreen(
         uid?.let { onboardingViewModel.fetchProfile(it) }
     }
 
+
+
     Column(modifier = Modifier.background(DDBlue)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(all = 16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(16.dp)
         ) {
-            Text(
-                text = "Profile",
-                color = WText,
-                fontSize = 25.sp
-            )
-            Text(
-                text = "Your Fitness Journey",
-                color = GText,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            ProfileCard(
-                email = profile?.email ?: "Loading...",
-                name = profile?.email?.substringBefore("@") ?: "User"
-            )
-
-            Row {
-                ProfileMiniCard(
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(end = 4.dp),
-                    painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
-                    text1 = "Current Weight",
-                    text2 = profile?.currentWeight ?: "-"
-                )
-
-                ProfileMiniCard(
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(start = 4.dp),
-                    painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
-                    text1 = "Goal",
-                    text2 = profile?.goal ?: "-"
-                )
-            }
-            Row {
-                ProfileMiniCard(
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(end = 4.dp),
-                    painter = painterResource(R.drawable.calendar_svgrepo_com),
-                    text1 = "Total Workouts",
-                    text2 = "47"
-                )
-
-                ProfileMiniCard(
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(start = 4.dp),
-                    painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
-                    text1 = "Calories Burned",
-                    text2 = "12306"
-                )
-            }
-
-            SettingsCard()
-
-            //Sign Out Button
-            Button(
-                onClick = {
-                    authViewModel.signOut()
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Transparent),
-                border = BorderStroke(2.dp, Red),
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-            ) {
+            item {
                 Text(
-                    text = "Sign Out",
-                    color = Red
+                    text = "Profile",
+                    color = WText,
+                    fontSize = 25.sp
                 )
+                Text(
+                    text = "Your Fitness Journey",
+                    color = GText,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            item {
+                ProfileCard(
+                    email = profile?.email ?: "Loading...",
+                    name = profile?.email?.substringBefore("@") ?: "User"
+                )
+            }
+            item {
+                Row {
+                    ProfileMiniCard(
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(end = 4.dp),
+                        painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
+                        text1 = "Current Weight",
+                        text2 = profile?.currentWeight ?: "-"
+                    )
+
+                    ProfileMiniCard(
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(start = 4.dp),
+                        painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
+                        text1 = "Goal",
+                        text2 = profile?.goal ?: "-"
+                    )
+                }
+                Row {
+                    ProfileMiniCard(
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(end = 4.dp),
+                        painter = painterResource(R.drawable.calendar_svgrepo_com),
+                        text1 = "Total Workouts",
+                        text2 = "47"
+                    )
+
+                    ProfileMiniCard(
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(start = 4.dp),
+                        painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
+                        text1 = "Calories Burned",
+                        text2 = "12306"
+                    )
+                }
+            }
+            item {
+                SettingsCard()
+            }
+            item {
+                Button(
+                    onClick = {
+                        authViewModel.signOut()
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Transparent),
+                    border = BorderStroke(2.dp, Red),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Text(
+                        text = "Sign Out",
+                        color = Red
+                    )
+                }
             }
         }
     }

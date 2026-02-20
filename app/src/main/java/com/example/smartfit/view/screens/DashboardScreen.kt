@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smartfit.R
 import com.example.smartfit.ui.theme.SmartFitTheme
+import com.google.android.filament.utils.all
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,94 +43,93 @@ fun DashboardScreen(){
 
 
     Column(modifier = Modifier.background(Color(0xFF0F131A))) {
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(all = 16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        LazyColumn(
+            Modifier.fillMaxSize().padding(16.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.hero_fitness),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)),
-                contentDescription = "Home page bg1",
-                contentScale = ContentScale.FillWidth
-            )
-
-            Row {
-                FCard(
-                    painter = painterResource(R.drawable.flame_svgrepo_com),
-                    contentDescription = "Calories",
-                    maxValue = 2200f,
-                    value = 1847f,
-                    unit = " Kcal",
+            item {
+                Image(
+                    painter = painterResource(id = R.drawable.hero_fitness),
                     modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(end = 4.dp)
-                )
-                FCard(
-                    painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
-                    contentDescription = "Protein",
-                    maxValue = 150f,
-                    value = 128f,
-                    unit = " g",
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(start = 4.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentDescription = "Home page bg1",
+                    contentScale = ContentScale.FillWidth
                 )
             }
-
-            Row {
-                FCard(
-                    painter = painterResource(R.drawable.heartbeat_svgrepo_com),
-                    contentDescription = "Workouts",
-                    maxValue = 5f,
-                    value = 4f,
-                    unit = "",
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(end = 4.dp)
-                )
-                FCard(
-                    painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
-                    contentDescription = "Weight",
-                    maxValue = 80f,
-                    value = 75f,
-                    unit = " kg",
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .padding(start = 4.dp)
-                )
-            }
-
-            RecentActivity()
-
-            Row {
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF7043),   // Background color
-                        contentColor = Color(0xFFFAFAFA)             // Text color
-                    ),
-                    modifier = Modifier.weight(1f).padding(end = 4.dp)
-                ) {
-                    Text("Log Food")
+            item {
+                Row {
+                    FCard(
+                        painter = painterResource(R.drawable.flame_svgrepo_com),
+                        contentDescription = "Calories",
+                        maxValue = 2200f,
+                        value = 1847f,
+                        unit = " Kcal",
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(end = 4.dp)
+                    )
+                    FCard(
+                        painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
+                        contentDescription = "Protein",
+                        maxValue = 150f,
+                        value = 128f,
+                        unit = " g",
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(start = 4.dp)
+                    )
                 }
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00BFFF),   // Background color
-                        contentColor = Color.Black             // Text color
-                    ),
-                    modifier = Modifier.weight(1f).padding(start = 4.dp)
-                ) {
-                    Text("Start Workout")
+
+                Row {
+                    FCard(
+                        painter = painterResource(R.drawable.heartbeat_svgrepo_com),
+                        contentDescription = "Workouts",
+                        maxValue = 5f,
+                        value = 4f,
+                        unit = "",
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(end = 4.dp)
+                    )
+                    FCard(
+                        painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
+                        contentDescription = "Weight",
+                        maxValue = 80f,
+                        value = 75f,
+                        unit = " kg",
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(start = 4.dp)
+                    )
                 }
             }
-
+            item {
+                RecentActivity()
+            }
+            item {
+                Row {
+                    Button(
+                        onClick = {},
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFF7043),   // Background color
+                            contentColor = Color(0xFFFAFAFA)             // Text color
+                        ),
+                        modifier = Modifier.weight(1f).padding(end = 4.dp)
+                    ) {
+                        Text("Log Food")
+                    }
+                    Button(
+                        onClick = {},
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00BFFF),   // Background color
+                            contentColor = Color.Black             // Text color
+                        ),
+                        modifier = Modifier.weight(1f).padding(start = 4.dp)
+                    ) {
+                        Text("Start Workout")
+                    }
+                }
+            }
         }
     }
 
@@ -143,7 +144,11 @@ fun RecentActivity(){
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23))
     ) {
-        Text("Recent Activity", color = Color(0xFFFAFAFA))
+        Text(
+            "Recent Activity",
+            color = Color(0xFFFAFAFA),
+            modifier = Modifier.padding(all = 12.dp)
+        )
     }
 }
 

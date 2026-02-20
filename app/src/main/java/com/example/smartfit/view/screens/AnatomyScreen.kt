@@ -3,6 +3,7 @@ package com.example.smartfit.view.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,6 +33,60 @@ fun AnatomyScreen(onBackNavigateToExercise: () -> Unit) {
             .background(Color(0xFF0F131A))
             .fillMaxSize()
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = {
+                            destroyFilamentResources()
+                            onBackNavigateToExercise()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        modifier = Modifier.size(30.dp),
+                        contentPadding = PaddingValues(5.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.back_svgrepo_com),
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                    }
+
+                    Text(
+                        text = "3D Anatomy",
+                        fontSize = 25.sp,
+                        color = Color.White,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+            }
+            item {
+                SelectMuscle { exercise ->
+                    selectedExercise = exercise
+                    setExercise(exercise)   // 🔥 sends to filament
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            item {
+                AnatomyCard(selectedExercise)
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            item {
+                ShowSteps()
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -39,46 +94,12 @@ fun AnatomyScreen(onBackNavigateToExercise: () -> Unit) {
                 .padding(16.dp)
         ) {
 
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = {
-                        destroyFilamentResources()
-                        onBackNavigateToExercise()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    modifier = Modifier.size(30.dp),
-                    contentPadding = PaddingValues(5.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.back_svgrepo_com),
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
 
-                Text(
-                    text = "3D Anatomy",
-                    fontSize = 25.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
 
-            SelectMuscle { exercise ->
-                selectedExercise = exercise
-                setExercise(exercise)   // 🔥 sends to filament
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
 
-            AnatomyCard(selectedExercise)
 
-            Spacer(modifier = Modifier.height(12.dp))
 
-            ShowSteps()
         }
     }
 }
