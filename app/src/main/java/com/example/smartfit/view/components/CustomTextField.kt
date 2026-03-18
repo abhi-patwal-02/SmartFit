@@ -3,6 +3,7 @@ package com.example.smartfit.view.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -41,7 +42,9 @@ fun CustomTextField(
     borderColor: Color = Color.Transparent,
     cornerRadius: Int = 6,
     fontSize: Int = 16,
-    padding: PaddingValues = PaddingValues(horizontal = 12.dp)
+    padding: PaddingValues = PaddingValues(horizontal = 12.dp),
+    readOnly: Boolean = false,
+    onClick: (() -> Unit)? = null
 ) {
 
     Box(
@@ -68,7 +71,11 @@ fun CustomTextField(
                 onValueChange = onValueChange,
                 textStyle = TextStyle(color = WText, fontSize = fontSize.sp),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                readOnly = readOnly,
+                modifier = Modifier.fillMaxWidth().then(
+                    if (onClick != null) Modifier.clickable { onClick() }
+                    else Modifier
+                ),
                 decorationBox = { innerTextField ->
                     if (value.isEmpty()) {
                         Text(

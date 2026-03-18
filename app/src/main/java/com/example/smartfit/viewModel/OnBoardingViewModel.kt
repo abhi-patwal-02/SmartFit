@@ -88,7 +88,11 @@ class OnboardingViewModel : ViewModel() {
         targetWt: String,
         height: String,
         goal: String,
-        onComplete: () -> Unit
+        onComplete: () -> Unit,
+        gender: String,
+        dob: String,
+        calories: Int,
+        protein: Int
     ) {
         _state.value = OnboardingState.Loading
 
@@ -96,7 +100,11 @@ class OnboardingViewModel : ViewModel() {
             currentWeight = currWt,
             targetWeight = targetWt,
             height = height,
-            goal = goal
+            goal = goal,
+            gender = gender,
+            dob = dob,
+            calories = calories,
+            protein = protein
         ).toMap()
 
         viewModelScope.launch {

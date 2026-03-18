@@ -14,7 +14,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
@@ -26,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,8 +36,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartfit.R
 import com.example.smartfit.view.components.CustomTextField
+import com.example.smartfit.view.components.DatePickerField
 import com.example.smartfit.viewModel.OnboardingViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.example.smartfit.util.HealthCalculator
+import com.example.smartfit.view.components.DobPickerField
+import java.lang.String.format
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun OnBoardingScreen(
@@ -46,23 +55,54 @@ fun OnBoardingScreen(
     var currWt by remember { mutableStateOf("") }
     var targetWt by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("Male") }
+    var dob by remember { mutableStateOf("") }
     var selectedGoal by remember { mutableStateOf("Lose Weight") }
 
     // Define save function here
     val saveOnboardingDetails = {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
+
         if (uid != null) {
+
+            // --- convert safely ---
+            val weight = currWt.toFloatOrNull() ?: 0f
+            val h = height.toFloatOrNull() ?: 0f
+
+            // --- calculate age ---
+            val age = HealthCalculator.calculateAge(dob)
+
+            // --- calculate intake ---
+            val calories = HealthCalculator.calculateCalories(
+                weight = weight,
+                height = h,
+                age = age,
+                gender = gender,
+                goal = selectedGoal
+            )
+
+            val protein = HealthCalculator.calculateProtein(
+                weight = weight,
+                goal = selectedGoal
+            )
+
+            println("AGE = $age")
+            println("CALORIES = $calories")
+            println("PROTEIN = $protein")
+
             onboardingViewModel.saveOnboardingDetails(
                 uid = uid,
                 currWt = currWt,
                 targetWt = targetWt,
                 height = height,
                 goal = selectedGoal,
+                gender = gender,
+                dob = dob,
+                calories = calories,
+                protein = protein,
                 onComplete = onComplete
             )
         }
-        println("SAVE CLICKED UID = $uid")
-
     }
 
 
@@ -85,6 +125,10 @@ fun OnBoardingScreen(
                 onHeightChange = {height = it},
                 selectedGoal = selectedGoal,
                 onSelectedGoalChange = {selectedGoal = it},
+                gender = gender,
+                onGenderChange = {gender = it},
+                dob = dob,
+                onDobChange = {dob = it},
                 saveOnboardingDetails = saveOnboardingDetails
             )
         }
@@ -101,8 +145,15 @@ fun OnBoardingCard(
     onHeightChange: (String)->Unit,
     selectedGoal: String,
     onSelectedGoalChange: (String)->Unit,
+    gender: String,
+    onGenderChange: (String) -> Unit,
+    dob: String,
+    onDobChange: (String) -> Unit,
     saveOnboardingDetails: ()->Unit
 ){
+
+    var showDatePicker by remember { mutableStateOf(false) }
+
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23))
     ) {
@@ -154,6 +205,34 @@ fun OnBoardingCard(
                     onValueChange = onTargetWtChange,
                     placeholder = "78"
                 )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Date of Birth",
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 8.dp, top = 16.dp, end = 8.dp)
+                    )
+                    IconButton(
+                        onClick = { showDatePicker = true },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.calendar_svgrepo_com),
+                            contentDescription = null,
+                            tint = Color(0xFFFFFFFF)
+                        )
+                    }
+                }
+
+                CustomTextField(
+                    value = dob,
+                    onValueChange = {},
+                    placeholder = "dd-mm-yyyy",
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Text(
                     text = "Height (cm)",
                     color = Color(0xFFFAFAFA),
@@ -164,6 +243,17 @@ fun OnBoardingCard(
                     onValueChange = onHeightChange,
                     placeholder = "185"
                 )
+                Text(
+                    text = "Gender",
+                    color = Color.White,
+                    modifier = Modifier.padding(bottom = 12.dp, top = 16.dp)
+                )
+
+                GenderGroup(
+                    selectedGender = gender,
+                    onGenderSelected = onGenderChange
+                )
+
             }
 
             Column(
@@ -202,6 +292,60 @@ fun OnBoardingCard(
                 )
             }
 
+        }
+    }
+
+    if (showDatePicker) {
+
+        val context = LocalContext.current
+        val calendar = Calendar.getInstance()
+
+        android.app.DatePickerDialog(
+            context,
+            { _, y, m, d ->
+
+                val formatted = format(
+                    Locale.getDefault(),
+                    "%04d-%02d-%02d",
+                    y,
+                    m + 1,
+                    d
+                )
+
+                onDobChange(formatted)
+                showDatePicker = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).apply {
+            datePicker.maxDate = System.currentTimeMillis()
+            show()
+        }
+    }
+}
+
+@Composable
+fun GenderGroup(
+    selectedGender: String,
+    onGenderSelected: (String) -> Unit
+) {
+    val genders = listOf("Male", "Female")
+
+    Column {
+        genders.forEach { g ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = g == selectedGender,
+                    onClick = { onGenderSelected(g) },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Color(0xFFFF7043),
+                        unselectedColor = Color(0xFFFF7043)
+                    ),
+                    modifier = Modifier.height(30.dp)
+                )
+                Text(g, color = Color.White)
+            }
         }
     }
 }

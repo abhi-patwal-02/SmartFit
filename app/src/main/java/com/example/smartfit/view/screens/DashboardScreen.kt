@@ -22,6 +22,9 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,8 +35,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartfit.R
 import com.example.smartfit.ui.theme.SmartFitTheme
+import com.example.smartfit.viewModel.DashboardViewModel
+import com.example.smartfit.viewModel.NutritionViewModel
 import com.google.android.filament.utils.all
 
 
@@ -41,6 +47,17 @@ import com.google.android.filament.utils.all
 @Composable
 fun DashboardScreen(){
 
+    val dashboardVm: DashboardViewModel = viewModel()
+    val nutritionVm: NutritionViewModel = viewModel()
+
+    val foods by nutritionVm.foods.collectAsState()
+
+    LaunchedEffect(foods) {
+        dashboardVm.updateTotals(foods)
+    }
+    LaunchedEffect(Unit) {
+        dashboardVm.loadTargets()
+    }
 
     Column(modifier = Modifier.background(Color(0xFF0F131A))) {
         LazyColumn(
@@ -61,8 +78,8 @@ fun DashboardScreen(){
                     FCard(
                         painter = painterResource(R.drawable.flame_svgrepo_com),
                         contentDescription = "Calories",
-                        maxValue = 2200f,
-                        value = 1847f,
+                        maxValue = dashboardVm.caloriesTarget.toFloat(),
+                        value = dashboardVm.caloriesConsumed.toFloat(),
                         unit = " Kcal",
                         modifier = Modifier
                             .weight(weight = 1f)
@@ -71,8 +88,8 @@ fun DashboardScreen(){
                     FCard(
                         painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
                         contentDescription = "Protein",
-                        maxValue = 150f,
-                        value = 128f,
+                        maxValue = dashboardVm.proteinTarget.toFloat(),
+                        value = dashboardVm.proteinConsumed.toFloat(),
                         unit = " g",
                         modifier = Modifier
                             .weight(weight = 1f)
@@ -210,7 +227,7 @@ fun TwoColorProgressBar(
     trackColor: Color = Color(0xFF00BFFF),
     progressColor: Color = Color(0xFFFF7043)
 ) {
-    val progress = (value / maxValue).coerceIn(minimumValue = 0f, maximumValue = 1f)
+    val progress = if (maxValue <= 0f) 0f else (value / maxValue).coerceIn(0f, 1f)
     Box(modifier = modifier.fillMaxWidth()) {
         // Background full width bar (track)
         Box(
