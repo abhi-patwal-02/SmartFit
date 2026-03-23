@@ -1,12 +1,9 @@
 package com.example.smartfit.view.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -43,7 +40,8 @@ import com.example.smartfit.viewModel.ChatViewModel
 
 @Composable
 fun AICoachScreen(
-    viewModel: ChatViewModel = viewModel()
+    viewModel: ChatViewModel = viewModel(),
+    user_id: String = ""
 ){
 
     var userQuery by remember { mutableStateOf("") }
@@ -79,7 +77,7 @@ fun AICoachScreen(
                 )
                 Button(
                     onClick = {
-                        viewModel.sendMessage(userQuery)
+                        viewModel.sendMessage(userQuery, user_id)
                         userQuery = ""
                     },
                     shape = RoundedCornerShape(12.dp),

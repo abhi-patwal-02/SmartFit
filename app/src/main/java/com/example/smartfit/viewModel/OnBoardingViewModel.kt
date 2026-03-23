@@ -1,5 +1,6 @@
 package com.example.smartfit.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smartfit.model.OnboardingModel
@@ -37,6 +38,8 @@ class OnboardingViewModel : ViewModel() {
 
         val email = FirebaseAuth.getInstance().currentUser?.email ?: ""
 
+
+
         db.collection("users")
             .document(uid)
             .collection("profile")
@@ -45,6 +48,9 @@ class OnboardingViewModel : ViewModel() {
             .addOnSuccessListener { profileDoc ->
 
                 val name = profileDoc.getString("name") ?: "User"
+
+                Log.d("FirestoreDebug", "Profile exists: ${profileDoc.exists()}")
+                Log.d("FirestoreDebug", "Name: ${profileDoc.getString("name")}")
 
                 db.collection("users")
                     .document(uid)

@@ -5,10 +5,10 @@ import com.example.smartfit.remote.RetrofitClient
 
 class ChatRepository {
 
-    suspend fun sendMessage(message: String): String {
+    suspend fun sendMessage(message: String, user_id: String): String {
         return try {
             val response = RetrofitClient.api.sendMessage(
-                ChatRequestDto(message)
+                ChatRequestDto(message, user_id)
             )
             response.response
         } catch (e: Exception) {

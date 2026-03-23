@@ -13,9 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -45,13 +43,14 @@ val navItems = listOf(
     NavItem("Nutrition", R.drawable.apple_svgrepo_com),
     NavItem("Exercise", R.drawable.dumbell_svgrepo_com),
     NavItem("AI Coach", R.drawable.chat_dots_svgrepo_com),
-    NavItem("Profile", R.drawable.profile_1341_svgrepo_com)
+    NavItem("Friends", R.drawable.friends_icon)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(user_id: String = "") {
     var selectedIndex by remember { mutableStateOf(0) }
+    var showProfile by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.background(Color(0xFF181D25))) {
 
@@ -62,8 +61,15 @@ fun MainScreen() {
                         .fillMaxSize()
                         .padding(end = 20.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center                ) {
-                    Text("SmartFit", color = Color(0xFFFF7043))
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "SmartFit",
+                        color = Color(0xFFFF7043),
+                        modifier = Modifier.clickable {
+                            showProfile = true
+                        }
+                    )
                     Spacer(Modifier.weight(0.6f))
                     Image(
                         painter = painterResource(R.drawable.night_clear_svgrepo_com),
@@ -84,17 +90,24 @@ fun MainScreen() {
             .weight(1f)
             .background(Color(0xFF0F131A))
         ) {
-            when (selectedIndex) {
-                0 -> DashboardScreen()     // ✅ Calls another composable
-                1 -> NutritionScreen()
-                2 -> ExerciseNavHost()
-                3 -> AICoachScreen()
-                4 -> ProfileScreen()
+            if (showProfile) {
+                ProfileScreen(onBack = { showProfile = false })
+            } else {
+                when (selectedIndex) {
+                    0 -> DashboardScreen()
+                    1 -> NutritionScreen()
+                    2 -> ExerciseNavHost()
+                    3 -> AICoachScreen(user_id = user_id)
+                    4 -> FriendsScreen()
+                }
             }
         }
 
         // Bottom Navigation
-        CustomBottomNavBar(selectedIndex) { newIndex -> selectedIndex = newIndex }
+        CustomBottomNavBar(selectedIndex) { newIndex ->
+            showProfile = false
+            selectedIndex = newIndex
+        }
     }
 }
 

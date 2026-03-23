@@ -17,7 +17,7 @@ class ChatViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
         private set
 
-    fun sendMessage(text: String) {
+    fun sendMessage(text: String, user_id: String) {
         if (text.isBlank()) return
 
         // Add user message instantly
@@ -26,7 +26,7 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading = true
 
-            val reply = repo.sendMessage(text)
+            val reply = repo.sendMessage(text, user_id)
 
             messages.add(ChatMessage(reply, false))
             isLoading = false

@@ -43,12 +43,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-//        lifecycleScope.launch {
-//            ExerciseUploader.uploadExercises()
-//        }
-//        lifecycleScope.launch {
-//            FoodUploader.uploadFoods()
-//        }
+
+        // Auto-seed exercises and foods if collections are empty
+        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        db.collection("exercises").limit(1).get().addOnSuccessListener { snap ->
+            if (snap.isEmpty) {
+                ExerciseUploader.uploadExercises()
+            }
+        }
+        db.collection("foods").limit(1).get().addOnSuccessListener { snap ->
+            if (snap.isEmpty) {
+                FoodUploader.uploadFoods()
+            }
+        }
 
         Utils.init()
 
@@ -115,7 +122,7 @@ fun AuthGate(
                     }
                 })
             } else {
-                MainScreen()
+                MainScreen(FirebaseAuth.getInstance().currentUser?.uid ?: "")
             }
         }
 

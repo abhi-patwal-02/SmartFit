@@ -56,16 +56,29 @@ class AuthViewModel : ViewModel() {
                     val profile = mapOf(
                         "name" to name,
                         "email" to email,
+                        "searchableName" to name.lowercase(),
                         "createdAt" to System.currentTimeMillis()
                     )
 
-                    com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                        .collection("users")
+                    val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+
+                    db.collection("users")
                         .document(uid)
                         .collection("profile")
                         .document("main")
                         .set(profile)
                         .addOnSuccessListener {
+                            // Initialize points document
+                            db.collection("users")
+                                .document(uid)
+                                .collection("points")
+                                .document("main")
+                                .set(mapOf(
+                                    "totalPoints" to 0,
+                                    "currentStreak" to 0,
+                                    "lastWorkoutDate" to ""
+                                ))
+
                             _uiState.value = AuthState.Authenticated(email)
                         }
                         .addOnFailureListener {

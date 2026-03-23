@@ -31,3 +31,10 @@ val LGrey = Color(0xFF2B303B)
 val Red = Color(0xFFEF433C)
 
 val Black = Color(0xFF000000)
+
+// League Colors
+val BronzeColor = Color(0xFFCD7F32)
+val SilverColor = Color(0xFFC0C0C0)
+val GoldColor = Color(0xFFFFD700)
+val DiamondColor = Color(0xFFB9F2FF)
+val LegendColor = Color(0xFFFF7043)

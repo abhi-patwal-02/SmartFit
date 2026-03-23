@@ -52,14 +52,33 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartfit.model.FoodItem
 import com.example.smartfit.viewModel.FoodSearchViewModel
 import com.example.smartfit.viewModel.NutritionViewModel
+import com.example.smartfit.viewModel.DashboardViewModel
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun NutritionScreen(
     searchVM: FoodSearchViewModel = viewModel(),
-    nutritionVM: NutritionViewModel = viewModel()
+    nutritionVM: NutritionViewModel = viewModel(),
+    dashboardVM: DashboardViewModel = viewModel()
 ){
     val foods by nutritionVM.foods.collectAsState()
 
+    // Compute live totals
+    val totalCalories = foods.sumOf { it.calories }
+    val totalProtein = foods.sumOf { it.protein }
+    val totalCarbs = foods.sumOf { it.carbs }
+    val totalFat = foods.sumOf { it.fat }
+
+    // Load targets
+    LaunchedEffect(Unit) {
+        dashboardVM.loadTargets()
+    }
+
+    val calorieTarget = if (dashboardVM.caloriesTarget > 0) dashboardVM.caloriesTarget else 2000
+    val proteinTarget = if (dashboardVM.proteinTarget > 0) dashboardVM.proteinTarget else 150
+    // Rough estimates for carbs/fat targets based on calories
+    val carbsTarget = (calorieTarget * 0.45 / 4).toInt()   // 45% of cals from carbs
+    val fatTarget = (calorieTarget * 0.25 / 9).toInt()      // 25% of cals from fat
 
     Column(modifier = Modifier.background(Color(0xFF0F131A))){
         LazyColumn(
@@ -97,8 +116,8 @@ fun NutritionScreen(
                                 .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            CircularStat(value = 381f, maxValue = 2000f, label = "Calories")
-                            CircularStat(value = 36f, maxValue = 150f, label = "Protein", unit = "g")
+                            CircularStat(value = totalCalories.toFloat(), maxValue = calorieTarget.toFloat(), label = "Calories")
+                            CircularStat(value = totalProtein.toFloat(), maxValue = proteinTarget.toFloat(), label = "Protein", unit = "g")
                         }
                         Row(
                             Modifier
@@ -106,8 +125,8 @@ fun NutritionScreen(
                                 .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            CircularStat(value = 45f, maxValue = 250f, label = "Carbs", unit = "g")
-                            CircularStat(value = 5.4f, maxValue = 65f, label = "Fat", unit = "g")
+                            CircularStat(value = totalCarbs.toFloat(), maxValue = carbsTarget.toFloat(), label = "Carbs", unit = "g")
+                            CircularStat(value = totalFat.toFloat(), maxValue = fatTarget.toFloat(), label = "Fat", unit = "g")
                         }
                     }
                 }

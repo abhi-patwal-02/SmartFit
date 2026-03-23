@@ -62,6 +62,9 @@ class WorkoutViewModel : ViewModel() {
             .add(log)
 
         updateBurnedCalories(calories)
+
+        // Award points for completing a workout
+        PointsViewModel.awardPointsStatic()
     }
 
     private fun updateBurnedCalories(cal: Float) {
