@@ -53,18 +53,25 @@ import com.example.smartfit.ui.theme.WText
 import com.example.smartfit.viewModel.FriendsViewModel
 import com.example.smartfit.viewModel.PointsViewModel
 import com.example.smartfit.viewModel.SearchResult
+import com.example.smartfit.viewModel.FriendRequest
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun FriendsScreen(
     pointsViewModel: PointsViewModel = viewModel(),
-    friendsViewModel: FriendsViewModel = viewModel()
 ) {
+    // Use uid as a key so each user account gets its own ViewModel instance,
+    // preventing one user's friend list from leaking into another account's session.
+    val currentUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    val friendsViewModel: FriendsViewModel = viewModel(key = currentUid)
     val userPoints by pointsViewModel.userPoints.collectAsState()
     val league by pointsViewModel.league.collectAsState()
     val friends by friendsViewModel.friends.collectAsState()
     val searchResults by friendsViewModel.searchResults.collectAsState()
     val isSearching by friendsViewModel.isSearching.collectAsState()
     val friendUids by friendsViewModel.friendUids.collectAsState()
+    val receivedRequests by friendsViewModel.receivedRequests.collectAsState()
+    val sentRequestUids by friendsViewModel.sentRequestUids.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
 
@@ -156,11 +163,46 @@ fun FriendsScreen(
                         SearchResultCard(
                             user = user,
                             isAlreadyFriend = friendUids.contains(user.uid),
-                            onAddFriend = { friendsViewModel.addFriend(user.uid) }
+                            isRequested = sentRequestUids.contains(user.uid),
+                            onAddFriend = { friendsViewModel.sendFriendRequest(user.uid) }
                         )
                     }
                 }
 
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+            }
+
+            // ── Friend Requests ──
+            if (receivedRequests.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Friend Requests",
+                            color = WText,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "${receivedRequests.size} requests",
+                            color = GText,
+                            fontSize = 14.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                items(receivedRequests) { req ->
+                    FriendRequestCard(
+                        request = req,
+                        onAccept = { friendsViewModel.acceptFriendRequest(req.uid) },
+                        onReject = { friendsViewModel.rejectFriendRequest(req.uid) }
+                    )
+                }
+                
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
 
@@ -366,6 +408,7 @@ fun MyLeagueCard(
 fun SearchResultCard(
     user: SearchResult,
     isAlreadyFriend: Boolean,
+    isRequested: Boolean,
     onAddFriend: () -> Unit
 ) {
     Card(
@@ -416,6 +459,13 @@ fun SearchResultCard(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
                 )
+            } else if (isRequested) {
+                Text(
+                    text = "Requested",
+                    color = GText,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             } else {
                 Button(
                     onClick = onAddFriend,
@@ -424,6 +474,79 @@ fun SearchResultCard(
                     contentPadding = ButtonDefaults.ContentPadding
                 ) {
                     Text("Add", color = WText, fontSize = 13.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FriendRequestCard(
+    request: FriendRequest,
+    onAccept: () -> Unit,
+    onReject: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Grey),
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Orange.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.profile_1341_svgrepo_com),
+                    contentDescription = "User",
+                    modifier = Modifier.size(24.dp),
+                    tint = Orange
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = request.name.ifBlank { "User" },
+                    color = WText,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = request.email,
+                    color = GText,
+                    fontSize = 12.sp
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Button(
+                    onClick = onAccept,
+                    colors = ButtonDefaults.buttonColors(containerColor = Orange),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = ButtonDefaults.ContentPadding
+                ) {
+                    Text("Accept", color = WText, fontSize = 13.sp)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = onReject,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.outline_delete_24),
+                        contentDescription = "Reject",
+                        modifier = Modifier.size(20.dp),
+                        tint = GText
+                    )
                 }
             }
         }

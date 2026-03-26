@@ -54,13 +54,15 @@ import com.example.smartfit.viewModel.FoodSearchViewModel
 import com.example.smartfit.viewModel.NutritionViewModel
 import com.example.smartfit.viewModel.DashboardViewModel
 import androidx.compose.runtime.LaunchedEffect
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun NutritionScreen(
     searchVM: FoodSearchViewModel = viewModel(),
-    nutritionVM: NutritionViewModel = viewModel(),
     dashboardVM: DashboardViewModel = viewModel()
 ){
+    val currentUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    val nutritionVM: NutritionViewModel = viewModel(key = currentUid)
     val foods by nutritionVM.foods.collectAsState()
 
     // Compute live totals

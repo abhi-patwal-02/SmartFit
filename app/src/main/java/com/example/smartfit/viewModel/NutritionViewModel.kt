@@ -1,7 +1,6 @@
 package com.example.smartfit.viewModel
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.smartfit.model.FoodItem
 import com.example.smartfit.util.today
@@ -13,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 class NutritionViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
-    private val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     private val _foods = MutableStateFlow<List<FoodItem>>(emptyList())
     val foods: StateFlow<List<FoodItem>> = _foods
@@ -22,36 +21,58 @@ class NutritionViewModel : ViewModel() {
         listenToTodayFoods()
     }
 
-    // 🔹 FETCH REALTIME
+    // 🔹 FETCH REALTIME — listens to all meal documents for today
     private fun listenToTodayFoods() {
+        if (uid.isEmpty()) return
 
         db.collection("users")
             .document(uid)
             .collection("nutrition")
             .document(today())
             .collection("meals")
-            .addSnapshotListener { snapshot, _ ->
-
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("NutritionVM", "Listen failed: ${error.message}")
+                    return@addSnapshotListener
+                }
                 _foods.value = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(FoodItem::class.java)?.copy(docId = doc.id)
                 } ?: emptyList()
-
             }
     }
 
-    // 🔹 ADD FOOD
+    // 🔹 ADD FOOD — writes as explicit map so docId is never stored in Firestore
     fun addFood(food: FoodItem) {
+        if (uid.isEmpty()) {
+            Log.e("NutritionVM", "Cannot add food: user not logged in")
+            return
+        }
+
+        val mealData = mapOf(
+            "name"     to food.name,
+            "calories" to food.calories,
+            "protein"  to food.protein,
+            "carbs"    to food.carbs,
+            "fat"      to food.fat
+        )
 
         db.collection("users")
             .document(uid)
             .collection("nutrition")
             .document(today())
             .collection("meals")
-            .add(food)
+            .add(mealData)
+            .addOnSuccessListener { ref ->
+                Log.d("NutritionVM", "Meal added: ${ref.id}")
+            }
+            .addOnFailureListener { e ->
+                Log.e("NutritionVM", "Failed to add meal: ${e.message}")
+            }
     }
 
     // 🔹 DELETE FOOD
     fun deleteFood(docId: String) {
+        if (uid.isEmpty() || docId.isBlank()) return
 
         db.collection("users")
             .document(uid)
@@ -60,6 +81,9 @@ class NutritionViewModel : ViewModel() {
             .collection("meals")
             .document(docId)
             .delete()
+            .addOnFailureListener { e ->
+                Log.e("NutritionVM", "Failed to delete meal: ${e.message}")
+            }
     }
 
 }

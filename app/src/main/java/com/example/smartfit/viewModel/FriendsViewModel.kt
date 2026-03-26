@@ -14,6 +14,13 @@ data class SearchResult(
     val email: String = ""
 )
 
+data class FriendRequest(
+    val uid: String = "",
+    val name: String = "",
+    val email: String = "",
+    val timestamp: Long = 0L
+)
+
 class FriendsViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
@@ -31,8 +38,18 @@ class FriendsViewModel : ViewModel() {
     private val _friendUids = MutableStateFlow<Set<String>>(emptySet())
     val friendUids: StateFlow<Set<String>> = _friendUids
 
+    private val _receivedRequests = MutableStateFlow<List<FriendRequest>>(emptyList())
+    val receivedRequests: StateFlow<List<FriendRequest>> = _receivedRequests
+
+    private val _sentRequestUids = MutableStateFlow<Set<String>>(emptySet())
+    val sentRequestUids: StateFlow<Set<String>> = _sentRequestUids
+
     init {
-        if (uid.isNotEmpty()) loadFriends()
+        if (uid.isNotEmpty()) {
+            loadFriends()
+            loadFriendRequests()
+            loadSentRequests()
+        }
     }
 
     fun loadFriends() {
@@ -118,63 +135,146 @@ class FriendsViewModel : ViewModel() {
         _isSearching.value = true
         val lowerQuery = query.lowercase()
 
-        db.collection("users")
+        db.collectionGroup("profile")
             .get()
-            .addOnSuccessListener { usersSnap ->
+            .addOnSuccessListener { profilesSnap ->
                 val results = mutableListOf<SearchResult>()
-                var completed = 0
-                val userDocs = usersSnap.documents
-
-                if (userDocs.isEmpty()) {
-                    _searchResults.value = emptyList()
-                    _isSearching.value = false
-                    return@addOnSuccessListener
-                }
-
-                for (userDoc in userDocs) {
-                    val userId = userDoc.id
-                    if (userId == uid) {
-                        completed++
-                        if (completed == userDocs.size) {
-                            _searchResults.value = results
-                            _isSearching.value = false
-                        }
-                        continue
+                
+                for (profileDoc in profilesSnap.documents) {
+                    val userId = profileDoc.reference.parent.parent?.id ?: continue
+                    if (userId == uid) continue
+                    
+                    val name = profileDoc.getString("name") ?: ""
+                    val email = profileDoc.getString("email") ?: ""
+                    
+                    if (name.lowercase().contains(lowerQuery) || 
+                        email.lowercase().contains(lowerQuery)
+                    ) {
+                        results.add(SearchResult(uid = userId, name = name, email = email))
                     }
-
-                    db.collection("users")
-                        .document(userId)
-                        .collection("profile")
-                        .document("main")
-                        .get()
-                        .addOnSuccessListener { profileDoc ->
-                            val name = profileDoc.getString("name") ?: ""
-                            val email = profileDoc.getString("email") ?: ""
-
-                            if (name.lowercase().contains(lowerQuery) ||
-                                email.lowercase().contains(lowerQuery)
-                            ) {
-                                results.add(SearchResult(uid = userId, name = name, email = email))
-                            }
-
-                            completed++
-                            if (completed == userDocs.size) {
-                                _searchResults.value = results
-                                _isSearching.value = false
-                            }
-                        }
-                        .addOnFailureListener {
-                            completed++
-                            if (completed == userDocs.size) {
-                                _searchResults.value = results
-                                _isSearching.value = false
-                            }
-                        }
                 }
+                
+                _searchResults.value = results
+                _isSearching.value = false
             }
             .addOnFailureListener {
                 _searchResults.value = emptyList()
                 _isSearching.value = false
+            }
+    }
+
+    fun sendFriendRequest(friendUid: String) {
+        if (uid.isEmpty() || friendUid == uid) return
+
+        val timestamp = System.currentTimeMillis()
+
+        // Add to receiver's friendRequests
+        db.collection("users")
+            .document(friendUid)
+            .collection("friendRequests")
+            .document(uid)
+            .set(mapOf("uid" to uid, "timestamp" to timestamp))
+
+        // Add to sender's sentRequests
+        db.collection("users")
+            .document(uid)
+            .collection("sentRequests")
+            .document(friendUid)
+            .set(mapOf("uid" to friendUid, "timestamp" to timestamp))
+    }
+
+    fun acceptFriendRequest(friendUid: String) {
+        if (uid.isEmpty()) return
+        
+        // Add to friends
+        addFriend(friendUid)
+        
+        // Delete request from receiver
+        db.collection("users")
+            .document(uid)
+            .collection("friendRequests")
+            .document(friendUid)
+            .delete()
+            
+        // Delete request from sender
+        db.collection("users")
+            .document(friendUid)
+            .collection("sentRequests")
+            .document(uid)
+            .delete()
+    }
+
+    fun rejectFriendRequest(friendUid: String) {
+        if (uid.isEmpty()) return
+
+        // Delete request from receiver
+        db.collection("users")
+            .document(uid)
+            .collection("friendRequests")
+            .document(friendUid)
+            .delete()
+            
+        // Delete request from sender
+        db.collection("users")
+            .document(friendUid)
+            .collection("sentRequests")
+            .document(uid)
+            .delete()
+    }
+
+    private fun loadFriendRequests() {
+        if (uid.isEmpty()) return
+
+        db.collection("users")
+            .document(uid)
+            .collection("friendRequests")
+            .addSnapshotListener { snap, _ ->
+                if (snap == null || snap.isEmpty) {
+                    _receivedRequests.value = emptyList()
+                    return@addSnapshotListener
+                }
+
+                val requests = mutableListOf<FriendRequest>()
+                var completed = 0
+
+                for (doc in snap.documents) {
+                    val senderUid = doc.id
+                    val timestamp = doc.getLong("timestamp") ?: 0L
+
+                    db.collection("users")
+                        .document(senderUid)
+                        .collection("profile")
+                        .document("main")
+                        .get()
+                        .addOnSuccessListener { profileDoc ->
+                            val name = profileDoc.getString("name") ?: "User"
+                            val email = profileDoc.getString("email") ?: ""
+                            requests.add(FriendRequest(senderUid, name, email, timestamp))
+
+                            completed++
+                            if (completed == snap.size()) {
+                                _receivedRequests.value = requests.sortedByDescending { it.timestamp }
+                            }
+                        }
+                        .addOnFailureListener {
+                            completed++
+                            if (completed == snap.size()) {
+                                _receivedRequests.value = requests.sortedByDescending { it.timestamp }
+                            }
+                        }
+                }
+            }
+    }
+
+    private fun loadSentRequests() {
+        if (uid.isEmpty()) return
+
+        db.collection("users")
+            .document(uid)
+            .collection("sentRequests")
+            .addSnapshotListener { snap, _ ->
+                val sentUids = snap?.documents?.mapNotNull { it.id } ?: emptyList()
+                _sentRequestUids.value = sentUids.toSet()
             }
     }
 
