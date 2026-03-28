@@ -1,5 +1,6 @@
 package com.example.smartfit.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
@@ -27,6 +28,9 @@ class ChatViewModel : ViewModel() {
             isLoading = true
 
             val reply = repo.sendMessage(text, user_id)
+
+            Log.d("CHAT_DEBUG", "chat = $text")
+            Log.d("CHAT_DEBUG", "user_id = $user_id")
 
             messages.add(ChatMessage(reply, false))
             isLoading = false
