@@ -1,30 +1,15 @@
 package com.example.smartfit.view.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,143 +17,341 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartfit.R
+import com.example.smartfit.ui.theme.BgDeep
+import com.example.smartfit.ui.theme.CardBg
+import com.example.smartfit.ui.theme.Cyan
+import com.example.smartfit.ui.theme.Green
+import com.example.smartfit.ui.theme.Orange
 import com.example.smartfit.ui.theme.SmartFitTheme
+import com.example.smartfit.ui.theme.TextGrey
+import com.example.smartfit.ui.theme.TextWhite
+import com.example.smartfit.viewModel.ActivityItem
+import com.example.smartfit.viewModel.ActivityType
 import com.example.smartfit.viewModel.DashboardViewModel
 import com.example.smartfit.viewModel.NutritionViewModel
-import com.google.android.filament.utils.all
+import com.example.smartfit.viewModel.WeekDaySummary
 
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DashboardScreen
+// ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(){
+fun DashboardScreen() {
 
     val dashboardVm: DashboardViewModel = viewModel()
     val nutritionVm: NutritionViewModel = viewModel()
 
-    val foods by nutritionVm.foods.collectAsState()
+    val foods        by nutritionVm.foods.collectAsState()
+    val recentItems  by dashboardVm.recentActivity.collectAsState()
+    val weeklyData   by dashboardVm.weeklyData.collectAsState()
 
-    LaunchedEffect(foods) {
-        dashboardVm.updateTotals(foods)
-    }
-    LaunchedEffect(Unit) {
-        dashboardVm.loadTargets()
-    }
+    LaunchedEffect(foods) { dashboardVm.updateTotals(foods) }
 
-    Column(modifier = Modifier.background(Color(0xFF0F131A))) {
+    Column(modifier = Modifier.background(BgDeep)) {
         LazyColumn(
-            Modifier.fillMaxSize().padding(16.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+
+            // Hero image
             item {
                 Image(
                     painter = painterResource(id = R.drawable.hero_fitness),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp)),
-                    contentDescription = "Home page bg1",
+                    contentDescription = "Home page bg",
                     contentScale = ContentScale.FillWidth
                 )
             }
-            item {
-                Row {
-                    FCard(
-                        painter = painterResource(R.drawable.flame_svgrepo_com),
-                        contentDescription = "Calories",
-                        maxValue = dashboardVm.caloriesTarget.toFloat(),
-                        value = dashboardVm.caloriesConsumed.toFloat(),
-                        unit = " Kcal",
-                        modifier = Modifier
-                            .weight(weight = 1f)
-                            .padding(end = 4.dp)
-                    )
-                    FCard(
-                        painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
-                        contentDescription = "Protein",
-                        maxValue = dashboardVm.proteinTarget.toFloat(),
-                        value = dashboardVm.proteinConsumed.toFloat(),
-                        unit = " g",
-                        modifier = Modifier
-                            .weight(weight = 1f)
-                            .padding(start = 4.dp)
-                    )
-                }
 
+            // Feature 3 ── Burned vs Consumed balance card
+            item {
+                CalorieBalanceCard(
+                    consumed = dashboardVm.caloriesConsumed.toFloat(),
+                    burned   = dashboardVm.caloriesBurnedToday,
+                    target   = dashboardVm.caloriesTarget.toFloat()
+                )
+            }
+
+            // Existing nutrition/protein cards
+            item {
                 Row {
                     FCard(
-                        painter = painterResource(R.drawable.heartbeat_svgrepo_com),
-                        contentDescription = "Workouts",
-                        maxValue = 5f,
-                        value = 4f,
-                        unit = "",
-                        modifier = Modifier
-                            .weight(weight = 1f)
-                            .padding(end = 4.dp)
+                        painter            = painterResource(R.drawable.flame_svgrepo_com),
+                        contentDescription = "Calories",
+                        maxValue           = dashboardVm.caloriesTarget.toFloat(),
+                        value              = dashboardVm.caloriesConsumed.toFloat(),
+                        unit               = " Kcal",
+                        modifier           = Modifier.weight(1f).padding(end = 4.dp)
                     )
                     FCard(
-                        painter = painterResource(R.drawable.up_trend_round_svgrepo_com),
-                        contentDescription = "Weight",
-                        maxValue = 80f,
-                        value = 75f,
-                        unit = " kg",
-                        modifier = Modifier
-                            .weight(weight = 1f)
-                            .padding(start = 4.dp)
+                        painter            = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
+                        contentDescription = "Protein",
+                        maxValue           = dashboardVm.proteinTarget.toFloat(),
+                        value              = dashboardVm.proteinConsumed.toFloat(),
+                        unit               = " g",
+                        modifier           = Modifier.weight(1f).padding(start = 4.dp)
                     )
                 }
             }
+
+            // Feature 2 ── Weekly calorie chart
             item {
-                RecentActivity()
+                WeeklyCalorieChart(data = weeklyData)
             }
+
+            // Feature 1 ── Recent Activity feed
+            item {
+                RecentActivity(items = recentItems)
+            }
+
+            // Action buttons
             item {
                 Row {
                     Button(
                         onClick = {},
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFF7043),   // Background color
-                            contentColor = Color(0xFFFAFAFA)             // Text color
+                        colors  = ButtonDefaults.buttonColors(
+                            containerColor = Orange,
+                            contentColor   = TextWhite
                         ),
                         modifier = Modifier.weight(1f).padding(end = 4.dp)
-                    ) {
-                        Text("Log Food")
-                    }
+                    ) { Text("Log Food") }
+
                     Button(
                         onClick = {},
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00BFFF),   // Background color
-                            contentColor = Color.Black             // Text color
+                        colors  = ButtonDefaults.buttonColors(
+                            containerColor = Cyan,
+                            contentColor   = Color.Black
                         ),
                         modifier = Modifier.weight(1f).padding(start = 4.dp)
+                    ) { Text("Start Workout") }
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Feature 3 ── Calorie Balance Card
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun CalorieBalanceCard(consumed: Float, burned: Float, target: Float) {
+    val net   = consumed - burned
+    val color = if (net <= target) Green else Orange
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape    = RoundedCornerShape(16.dp),
+        colors   = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Today's Calorie Balance",
+                color      = TextWhite,
+                fontWeight = FontWeight.SemiBold,
+                fontSize   = 14.sp
+            )
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                BalanceStat(label = "Eaten",    value = consumed.toInt(), color = Orange)
+                BalanceStat(label = "Burned",   value = burned.toInt(),   color = Green)
+                BalanceStat(label = "Net",       value = net.toInt(),     color = color)
+                BalanceStat(label = "Goal",      value = target.toInt(),  color = Cyan)
+            }
+            Spacer(Modifier.height(10.dp))
+            // Net vs goal progress bar
+            val progress = if (target > 0f) (net / target).coerceIn(0f, 1f) else 0f
+            TwoColorProgressBar(value = net.coerceAtLeast(0f), maxValue = target.coerceAtLeast(1f), trackColor = Green, progressColor = color)
+        }
+    }
+}
+
+@Composable
+private fun BalanceStat(label: String, value: Int, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = value.toString(), color = color, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(text = label, color = TextGrey, fontSize = 11.sp)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Feature 2 ── Weekly Calorie Chart
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun WeeklyCalorieChart(data: List<WeekDaySummary>) {
+    Card(
+        modifier  = Modifier.fillMaxWidth(),
+        shape     = RoundedCornerShape(16.dp),
+        colors    = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Weekly Calories",
+                color      = TextWhite,
+                fontWeight = FontWeight.SemiBold,
+                fontSize   = 14.sp
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(modifier = Modifier.padding(bottom = 4.dp)) {
+                Box(modifier = Modifier.size(10.dp).background(Orange, CircleShape))
+                Text(" Consumed", color = TextGrey, fontSize = 11.sp)
+                Spacer(Modifier.width(8.dp))
+                Box(modifier = Modifier.size(10.dp).background(Green, CircleShape))
+                Text(" Burned", color = TextGrey, fontSize = 11.sp)
+            }
+            Spacer(Modifier.height(8.dp))
+
+            if (data.isEmpty()) {
+                Text("No data yet", color = TextGrey, fontSize = 12.sp)
+                return@Column
+            }
+
+            val maxVal = data.maxOf { maxOf(it.caloriesConsumed, it.caloriesBurned) }
+                .coerceAtLeast(1f)
+
+            val chartHeight = 100.dp
+            val barWidth    = 20.dp
+            val gap         = 4.dp
+
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment     = Alignment.Bottom
+            ) {
+                data.forEach { day ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier            = Modifier.weight(1f)
                     ) {
-                        Text("Start Workout")
+                        // Two bars side by side
+                        Row(
+                            verticalAlignment     = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier              = Modifier.height(chartHeight)
+                        ) {
+                            // Consumed bar (animated)
+                            val consumedFrac by animateFloatAsState(
+                                targetValue = (day.caloriesConsumed / maxVal).coerceIn(0f, 1f)+0.05f,
+                                animationSpec = tween(600),
+                                label = "consumed"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .width(barWidth)
+                                    .fillMaxHeight(consumedFrac)
+                                    .background(Orange, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                            )
+                            Spacer(Modifier.width(gap))
+                            // Burned bar (animated)
+                            val burnedFrac by animateFloatAsState(
+                                targetValue = (day.caloriesBurned / maxVal).coerceIn(0f, 1f)+0.05f,
+                                animationSpec = tween(600),
+                                label = "burned"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .width(barWidth)
+                                    .fillMaxHeight(burnedFrac)
+                                    .background(Green, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                            )
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Text(day.dayLabel, color = TextGrey, fontSize = 10.sp)
                     }
                 }
             }
         }
     }
+}
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Feature 1 ── Recent Activity Feed
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun RecentActivity(items: List<ActivityItem>) {
+    Card(
+        modifier  = Modifier.fillMaxWidth(),
+        shape     = RoundedCornerShape(16.dp),
+        colors    = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Recent Activity",
+                color      = TextWhite,
+                fontWeight = FontWeight.SemiBold,
+                fontSize   = 14.sp
+            )
+            Spacer(Modifier.height(8.dp))
+
+            if (items.isEmpty()) {
+                Text(
+                    "No activity logged today. Start working out or log a meal!",
+                    color    = TextGrey,
+                    fontSize = 12.sp
+                )
+            } else {
+                items.forEach { item ->
+                    ActivityRow(item = item)
+                    if (item != items.last()) {
+                        Divider(color = Color(0xFF252B36), thickness = 0.5.dp)
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
-fun RecentActivity(){
-    Card(
-        modifier = Modifier
-            .padding(vertical = 4.dp)
-            .fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23))
+private fun ActivityRow(item: ActivityItem) {
+    val isWorkout  = item.type == ActivityType.WORKOUT
+    val dotColor   = if (isWorkout) Cyan else Orange
+    val iconRes    = if (isWorkout) R.drawable.heartbeat_svgrepo_com else R.drawable.flame_svgrepo_com
+
+    Row(
+        modifier          = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            "Recent Activity",
-            color = Color(0xFFFAFAFA),
-            modifier = Modifier.padding(all = 12.dp)
+        // Colored dot indicator
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(dotColor, CircleShape)
+        )
+        Spacer(Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(item.label,  color = TextWhite, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Text(item.detail, color = TextGrey,  fontSize = 11.sp)
+        }
+        Image(
+            painter            = painterResource(iconRes),
+            contentDescription = null,
+            modifier           = Modifier.size(18.dp)
         )
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Existing helpers (unchanged)
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun FCard(
     painter: Painter,
@@ -177,44 +360,31 @@ fun FCard(
     value: Float,
     unit: String,
     modifier: Modifier = Modifier
-){
+) {
     Card(
-        modifier = modifier
-            .padding(vertical = 4.dp),
+        modifier  = modifier.padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171B23)),
+        colors    = CardDefaults.cardColors(containerColor = CardBg),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(modifier = Modifier.padding(bottom = 4.dp)) {
                 Image(
-                    painter = painter,
+                    painter            = painter,
                     contentDescription = contentDescription,
-                    modifier = Modifier
-                        .height(20.dp)
-                        .align(Alignment.CenterVertically)
+                    modifier           = Modifier.height(20.dp).align(Alignment.CenterVertically)
                 )
-                Text(
-                    text = contentDescription,
-                    color = Color(0xFFFAFAFA),
-                    fontSize = 12.sp
-                )
+                Text(text = contentDescription, color = TextWhite, fontSize = 12.sp)
             }
             Row {
+                Text(text = value.toInt().toString(), fontSize = 20.sp, color = TextWhite)
                 Text(
-                    text = value.toInt().toString(),
-                    fontSize = 20.sp,
-                    color = Color(0xFFFAFAFA)
-                )
-                Text(
-                    text = '/' + maxValue.toInt().toString() + unit,
+                    text     = '/' + maxValue.toInt().toString() + unit,
                     fontSize = 12.sp,
-                    color = Color(0xFFA6A6A6)
+                    color    = TextGrey
                 )
             }
-            TwoColorProgressBar(value=value, maxValue = maxValue)
-
+            TwoColorProgressBar(value = value, maxValue = maxValue)
         }
-
     }
 }
 
@@ -224,19 +394,17 @@ fun TwoColorProgressBar(
     maxValue: Float,
     modifier: Modifier = Modifier,
     barHeight: Float = 6f,
-    trackColor: Color = Color(0xFF00BFFF),
-    progressColor: Color = Color(0xFFFF7043)
+    trackColor: Color = Cyan,
+    progressColor: Color = Orange
 ) {
     val progress = if (maxValue <= 0f) 0f else (value / maxValue).coerceIn(0f, 1f)
     Box(modifier = modifier.fillMaxWidth()) {
-        // Background full width bar (track)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(barHeight.dp)
                 .background(trackColor)
         )
-        // Progress completed portion
         Box(
             modifier = Modifier
                 .fillMaxWidth(progress)
@@ -246,30 +414,25 @@ fun TwoColorProgressBar(
     }
 }
 
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun WelcomeScreenPreview(){
-    SmartFitTheme {
-        DashboardScreen()
-    }
-}
-
 @Composable
 fun BottomNavBar(
     selectedIndex: Int,
     onItemSelected: (Int) -> Unit
 ) {
-    NavigationBar(
-        containerColor = Color(0xFF171B23) // Your theme
-    ) {
+    NavigationBar(containerColor = CardBg) {
         navItems.forEachIndexed { index, item ->
             NavigationBarItem(
                 selected = index == selectedIndex,
-                onClick = { onItemSelected(index) },
-                icon = { Icon(painterResource(item.icon), contentDescription = item.label) },
-                label = { Text(item.label) }
+                onClick  = { onItemSelected(index) },
+                icon     = { Icon(painterResource(item.icon), contentDescription = item.label) },
+                label    = { Text(item.label) }
             )
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun WelcomeScreenPreview() {
+    SmartFitTheme { DashboardScreen() }
 }

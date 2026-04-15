@@ -22,7 +22,7 @@ val GText = Color(0xFFA6A6A6)
 
 val Grey = Color(0xFF1C202A)
 
-val Orange = Color(0xFFFB5936)
+val Orange1 = Color(0xFFFB5936)
 
 val Transparent = Color(0x00000000)
 
@@ -31,6 +31,14 @@ val LGrey = Color(0xFF2B303B)
 val Red = Color(0xFFEF433C)
 
 val Black = Color(0xFF000000)
+
+val BgDeep    = Color(0xFF0F131A)
+val CardBg    = Color(0xFF171B23)
+val Orange    = Color(0xFFFF7043)
+val Cyan      = Color(0xFF00BFFF)
+val TextWhite = Color(0xFFFAFAFA)
+val TextGrey  = Color(0xFFA6A6A6)
+val Green     = Color(0xFF4CAF50)
 
 // League Colors
 val BronzeColor = Color(0xFFCD7F32)

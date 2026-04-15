@@ -67,6 +67,7 @@ fun ProfileScreen(
     val league by pointsViewModel.league.collectAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
+
     LaunchedEffect(uid) {
         uid?.let { onboardingViewModel.fetchProfile(it) }
     }

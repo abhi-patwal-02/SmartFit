@@ -6,6 +6,7 @@ import com.example.smartfit.model.FoodItem
 import com.example.smartfit.util.today
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -35,10 +36,24 @@ class NutritionViewModel : ViewModel() {
                     Log.e("NutritionVM", "Listen failed: ${error.message}")
                     return@addSnapshotListener
                 }
-                _foods.value = snapshot?.documents?.mapNotNull { doc ->
+                val currentFoods = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(FoodItem::class.java)?.copy(docId = doc.id)
                 } ?: emptyList()
+                
+                _foods.value = currentFoods
+                updateDailySummary(currentFoods)
             }
+    }
+
+    private fun updateDailySummary(foodsList: List<FoodItem>) {
+        if (uid.isEmpty()) return
+        val totalCalories = foodsList.sumOf { it.calories }
+        
+        db.collection("users")
+            .document(uid)
+            .collection("dailySummary")
+            .document(today())
+            .set(mapOf("caloriesConsumed" to totalCalories), SetOptions.merge())
     }
 
     // 🔹 ADD FOOD — writes as explicit map so docId is never stored in Firestore
