@@ -23,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartfit.debug.ExerciseUploader
 import com.example.smartfit.debug.FoodUploader
+import com.example.smartfit.debug.HistorySeeder2
 import com.example.smartfit.ui.theme.SmartFitTheme
 import com.example.smartfit.view.screens.DashboardScreen
 import com.example.smartfit.view.screens.LoadingScreen
@@ -115,6 +116,8 @@ fun AuthGate(
         is AuthState.Loading -> LoadingScreen()
 
         is AuthState.Authenticated -> {
+            //HistorySeeder2.seed() // uncomment to seed 4 extra days of history
+            
             if (!onboardingComplete) {
                 OnBoardingScreen(onComplete = {
                     FirebaseAuth.getInstance().currentUser?.uid?.let {

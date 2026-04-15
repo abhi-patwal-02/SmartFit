@@ -1,6 +1,7 @@
 package com.example.smartfit.view.screens
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -64,32 +65,74 @@ fun AICoachScreen(
             }
         },
         bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                CustomTextField(
-                    value = userQuery,
-                    onValueChange = {userQuery = it},
-                    placeholder = "Type your question",
-                    modifier = Modifier.fillMaxWidth(0.85f),
-                    borderColor = Color.DarkGray
-                )
-                Button(
-                    onClick = {
-                        viewModel.sendMessage(userQuery, user_id)
-                        userQuery = ""
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.padding(start = 8.dp),
-                    contentPadding = PaddingValues(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043))
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Dropdown selector for mentions
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = userQuery.endsWith("@") || userQuery.endsWith("@ ")
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.send_svgrepo_com),
-                        contentDescription = "Send Button",
-                        tint = Color(0xFFFAFAFA)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C202A)),
+                        shape = RoundedCornerShape(8.dp),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    val prefix = userQuery.substringBeforeLast("@")
+                                    userQuery = prefix + "@WeeklySummary "
+                                }
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.circle_of_fifths_svgrepo_com),
+                                contentDescription = "Summary",
+                                tint = Color(0xFFFF7043),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                " Weekly Summary",
+                                color = Color(0xFFFAFAFA),
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp, start = 16.dp, end = 16.dp, top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CustomTextField(
+                        value = userQuery,
+                        onValueChange = {userQuery = it},
+                        placeholder = "Type your question",
+                        modifier = Modifier.fillMaxWidth(0.85f),
+                        borderColor = Color.DarkGray
                     )
+                    Button(
+                        onClick = {
+                            viewModel.sendMessage(userQuery, user_id)
+                            userQuery = ""
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.padding(start = 8.dp),
+                        contentPadding = PaddingValues(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043))
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.send_svgrepo_com),
+                            contentDescription = "Send Button",
+                            tint = Color(0xFFFAFAFA)
+                        )
+                    }
                 }
             }
         },

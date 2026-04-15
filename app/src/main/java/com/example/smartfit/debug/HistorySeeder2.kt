@@ -9,24 +9,14 @@ import java.util.Calendar
 import java.util.Locale
 
 /**
- * HistorySeeder — Debug utility to seed 2 weeks of realistic workout + meal history
+ * HistorySeeder2 — Debug utility to seed 4 more days of realistic workout + meal history
  * for the currently logged-in user into Firestore.
- *
- * Data written matches the exact paths used by NutritionViewModel and WorkoutViewModel:
- *   Meals   → users/{uid}/nutrition/{yyyy-MM-dd}/meals/{autoId}
- *   Workouts→ users/{uid}/workouts/{yyyy-MM-dd}/items/{autoId}
- *   Summary → users/{uid}/dailySummary/{yyyy-MM-dd}  { burnedCalories }
- *   Points  → users/{uid}/points/main  { totalPoints, currentStreak, lastWorkoutDate }
- *
- * HOW TO USE:
- *   Call HistorySeeder.seed() once from MainActivity (or any debug trigger) after login.
- *   Remove the call once data is seeded.
  */
-object HistorySeeder {
+object HistorySeeder2 {
 
     private val db = FirebaseFirestore.getInstance()
     private val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    private const val TAG = "HistorySeeder"
+    private const val TAG = "HistorySeeder2"
 
     // ── Meal templates — drawn from FoodUploader food list ──────────────────────
     private val breakfasts = listOf(
@@ -160,19 +150,13 @@ object HistorySeeder {
     )
 
     // ── Public entry point ───────────────────────────────────────────────────────
-    /**
-     * Seeds 14 days of history (13 days ago → yesterday) for the currently
-     * logged-in user. Does NOT overwrite today so live usage isn't interrupted.
-     *
-     * Call once from MainActivity after confirming the user is logged in.
-     */
     fun seed() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid == null) {
             Log.e(TAG, "No user logged in — aborting seed")
             return
         }
-        Log.d(TAG, "Seeding 14 days of history for uid=$uid")
+        Log.d(TAG, "Seeding 4 extra days of history for uid=\$uid")
         seedForUser(uid)
     }
 
@@ -182,22 +166,21 @@ object HistorySeeder {
         var streak = 0
         var lastWorkoutDate = ""
 
-        // Shuffle templates uniquely per user using uid as a random seed.
-        // This means every user gets a different but consistent plan.
-        val rng = java.util.Random(uid.hashCode().toLong())
+        val rng = java.util.Random(uid.hashCode().toLong() + 1L) // slightly different seed
         val shuffledBreakfasts = breakfasts.shuffled(rng)
         val shuffledLunches    = lunches.shuffled(rng)
         val shuffledSnacks     = snacks.shuffled(rng)
         val shuffledDinners    = dinners.shuffled(rng)
         val shuffledWorkouts   = workoutDays.shuffled(rng)
 
-        for (daysAgo in 14 downTo 1) {
+        // Seed for recent 4 days: 4 days ago to 1 day ago
+        for (daysAgo in 4 downTo 1) {
             cal.time = java.util.Date()
             cal.add(Calendar.DAY_OF_YEAR, -daysAgo)
             val dateStr = sdf.format(cal.time)
 
-            val dayIndex = (14 - daysAgo) % shuffledWorkouts.size
-            val mealIdx  = (14 - daysAgo) % shuffledBreakfasts.size
+            val dayIndex = (4 - daysAgo) % shuffledWorkouts.size
+            val mealIdx  = (4 - daysAgo) % shuffledBreakfasts.size
 
             // ── Write meals ──────────────────────────────────────────────────────
             val dayMeals = shuffledBreakfasts[mealIdx] + shuffledLunches[mealIdx] +
@@ -210,7 +193,7 @@ object HistorySeeder {
                     .collection("nutrition").document(dateStr)
                     .collection("meals")
                     .add(m)
-                    .addOnFailureListener { Log.e(TAG, "Meal write fail [$dateStr]: ${it.message}") }
+                    .addOnFailureListener { Log.e(TAG, "Meal write fail [\$dateStr]: \${it.message}") }
             }
 
             // ── Write workouts & daily burned calories ───────────────────────────
@@ -221,7 +204,7 @@ object HistorySeeder {
                     .collection("workouts").document(dateStr)
                     .collection("items")
                     .add(w)
-                    .addOnFailureListener { Log.e(TAG, "Workout write fail [$dateStr]: ${it.message}") }
+                    .addOnFailureListener { Log.e(TAG, "Workout write fail [\$dateStr]: \${it.message}") }
                 totalBurned += w["calories"] as Float
             }
 
@@ -247,7 +230,7 @@ object HistorySeeder {
             }
             lastWorkoutDate = dateStr
 
-            Log.d(TAG, "Seeded $dateStr | streak=$streak | totalPoints=$totalPoints")
+            Log.d(TAG, "Seeded \$dateStr | streak=\$streak | totalPoints=\$totalPoints")
         }
 
         // ── Write final accumulated points ───────────────────────────────────────
@@ -260,10 +243,10 @@ object HistorySeeder {
             .collection("points").document("main")
             .set(pointsData, SetOptions.merge())
             .addOnSuccessListener {
-                Log.d(TAG, "✅ Seed complete! totalPoints=$totalPoints streak=$streak lastDate=$lastWorkoutDate")
+                Log.d(TAG, "✅ Seed 2 complete! totalPoints=\$totalPoints streak=\$streak lastDate=\$lastWorkoutDate")
             }
             .addOnFailureListener {
-                Log.e(TAG, "Points write failed: ${it.message}")
+                Log.e(TAG, "Points write failed: \${it.message}")
             }
     }
 

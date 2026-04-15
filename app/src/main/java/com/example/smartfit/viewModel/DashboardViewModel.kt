@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import com.google.firebase.firestore.ListenerRegistration
 
 // Represents a single item in the Recent Activity feed
 data class ActivityItem(
@@ -70,10 +71,17 @@ class DashboardViewModel : ViewModel() {
         }
     }
 
+    // ── Listener Registrations to prevent duplicates ────────────────────────
+    private var targetsListener: ListenerRegistration? = null
+    private var burnedCaloriesListener: ListenerRegistration? = null
+    private var workoutsListener: ListenerRegistration? = null
+    private var mealsListener: ListenerRegistration? = null
+
     // ── Targets & today's nutrition ──────────────────────────────────────────
     fun loadTargets() {
         if (uid.isEmpty()) return
-        db.collection("users")
+        targetsListener?.remove()
+        targetsListener = db.collection("users")
             .document(uid)
             .collection("onboardingDetails")
             .document("main")
@@ -93,8 +101,9 @@ class DashboardViewModel : ViewModel() {
     // ── Feature 3: Today's burned calories ───────────────────────────────────
     private fun loadTodayBurnedCalories() {
         if (uid.isEmpty()) return
+        burnedCaloriesListener?.remove()
         val todayStr = today()
-        db.collection("users")
+        burnedCaloriesListener = db.collection("users")
             .document(uid)
             .collection("dailySummary")
             .document(todayStr)
@@ -109,7 +118,8 @@ class DashboardViewModel : ViewModel() {
 
     private fun loadRecentWorkouts() {
         if (uid.isEmpty()) return
-        db.collection("users")
+        workoutsListener?.remove()
+        workoutsListener = db.collection("users")
             .document(uid)
             .collection("workouts")
             .document(today())
@@ -133,7 +143,8 @@ class DashboardViewModel : ViewModel() {
 
     private fun loadRecentMeals() {
         if (uid.isEmpty()) return
-        db.collection("users")
+        mealsListener?.remove()
+        mealsListener = db.collection("users")
             .document(uid)
             .collection("nutrition")
             .document(today())
@@ -151,6 +162,17 @@ class DashboardViewModel : ViewModel() {
                 _recentMeals.value = items
                 mergeActivity()
             }
+    }
+
+    // ── Refresh Action ───────────────────────────────────────────────────────
+    fun refreshData() {
+        if (uid.isNotEmpty()) {
+            loadTargets()
+            loadTodayBurnedCalories()
+            loadRecentWorkouts()
+            loadRecentMeals()
+            loadWeeklySummary()
+        }
     }
 
     private fun mergeActivity() {

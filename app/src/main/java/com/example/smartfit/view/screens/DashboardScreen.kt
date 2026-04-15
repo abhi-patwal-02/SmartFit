@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -39,10 +40,16 @@ import com.example.smartfit.viewModel.WeekDaySummary
 
 
 
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import kotlinx.coroutines.delay
+
 // ─────────────────────────────────────────────────────────────────────────────
 // DashboardScreen
 // ─────────────────────────────────────────────────────────────────────────────
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun DashboardScreen() {
 
@@ -55,7 +62,26 @@ fun DashboardScreen() {
 
     LaunchedEffect(foods) { dashboardVm.updateTotals(foods) }
 
-    Column(modifier = Modifier.background(BgDeep)) {
+    var refreshing by remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = refreshing,
+        onRefresh = { refreshing = true }
+    )
+
+    LaunchedEffect(refreshing) {
+        if (refreshing) {
+            dashboardVm.refreshData()
+            delay(800)
+            refreshing = false
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
+            .background(BgDeep)
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -106,9 +132,13 @@ fun DashboardScreen() {
                 }
             }
 
-            // Feature 2 ── Weekly calorie chart
+            // Feature 2 ── Weekly calorie charts (Separated)
             item {
-                WeeklyCalorieChart(data = weeklyData)
+                Column {
+                    WeeklyConsumedChart(data = weeklyData)
+                    Spacer(Modifier.height(8.dp))
+                    WeeklyBurnedChart(data = weeklyData)
+                }
             }
 
             // Feature 1 ── Recent Activity feed
@@ -117,28 +147,36 @@ fun DashboardScreen() {
             }
 
             // Action buttons
-            item {
-                Row {
-                    Button(
-                        onClick = {},
-                        colors  = ButtonDefaults.buttonColors(
-                            containerColor = Orange,
-                            contentColor   = TextWhite
-                        ),
-                        modifier = Modifier.weight(1f).padding(end = 4.dp)
-                    ) { Text("Log Food") }
-
-                    Button(
-                        onClick = {},
-                        colors  = ButtonDefaults.buttonColors(
-                            containerColor = Cyan,
-                            contentColor   = Color.Black
-                        ),
-                        modifier = Modifier.weight(1f).padding(start = 4.dp)
-                    ) { Text("Start Workout") }
-                }
-            }
+//            item {
+//                Row {
+//                    Button(
+//                        onClick = {},
+//                        colors  = ButtonDefaults.buttonColors(
+//                            containerColor = Orange,
+//                            contentColor   = TextWhite
+//                        ),
+//                        modifier = Modifier.weight(1f).padding(end = 4.dp)
+//                    ) { Text("Log Food") }
+//
+//                    Button(
+//                        onClick = {},
+//                        colors  = ButtonDefaults.buttonColors(
+//                            containerColor = Cyan,
+//                            contentColor   = Color.Black
+//                        ),
+//                        modifier = Modifier.weight(1f).padding(start = 4.dp)
+//                    ) { Text("Start Workout") }
+//                }
+//            }
         }
+
+        PullRefreshIndicator(
+            refreshing = refreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+            contentColor = Orange,
+            backgroundColor = CardBg
+        )
     }
 }
 
@@ -189,11 +227,19 @@ private fun BalanceStat(label: String, value: Int, color: Color) {
     }
 }
 
+//@Composable
+//private fun BalanceStat(label: String, value: Int, color: Color) {
+//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Text(text = value.toString(), color = color, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+//        Text(text = label, color = TextGrey, fontSize = 11.sp)
+//    }
+//}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Feature 2 ── Weekly Calorie Chart
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun WeeklyCalorieChart(data: List<WeekDaySummary>) {
+fun WeeklyConsumedChart(data: List<WeekDaySummary>) {
     Card(
         modifier  = Modifier.fillMaxWidth(),
         shape     = RoundedCornerShape(16.dp),
@@ -202,19 +248,11 @@ fun WeeklyCalorieChart(data: List<WeekDaySummary>) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Weekly Calories",
+                "Weekly Consumed",
                 color      = TextWhite,
                 fontWeight = FontWeight.SemiBold,
                 fontSize   = 14.sp
             )
-            Spacer(Modifier.height(4.dp))
-            Row(modifier = Modifier.padding(bottom = 4.dp)) {
-                Box(modifier = Modifier.size(10.dp).background(Orange, CircleShape))
-                Text(" Consumed", color = TextGrey, fontSize = 11.sp)
-                Spacer(Modifier.width(8.dp))
-                Box(modifier = Modifier.size(10.dp).background(Green, CircleShape))
-                Text(" Burned", color = TextGrey, fontSize = 11.sp)
-            }
             Spacer(Modifier.height(8.dp))
 
             if (data.isEmpty()) {
@@ -222,32 +260,36 @@ fun WeeklyCalorieChart(data: List<WeekDaySummary>) {
                 return@Column
             }
 
-            val maxVal = data.maxOf { maxOf(it.caloriesConsumed, it.caloriesBurned) }
-                .coerceAtLeast(1f)
-
-            val chartHeight = 100.dp
-            val barWidth    = 20.dp
-            val gap         = 4.dp
+            val maxVal = data.maxOf { it.caloriesConsumed }.coerceAtLeast(1f)
+            val chartHeight = 80.dp
+            val barWidth    = 24.dp
 
             Row(
                 modifier              = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment     = Alignment.Bottom
             ) {
-                data.forEach { day ->
+                var selectedIndex by remember { mutableStateOf(-1) }
+
+                data.forEachIndexed { index, day ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier            = Modifier.weight(1f)
+                        modifier            = Modifier
+                            .weight(1f)
+                            .clickable(
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                selectedIndex = if (selectedIndex == index) -1 else index
+                            }
                     ) {
-                        // Two bars side by side
                         Row(
                             verticalAlignment     = Alignment.Bottom,
                             horizontalArrangement = Arrangement.Center,
                             modifier              = Modifier.height(chartHeight)
                         ) {
-                            // Consumed bar (animated)
                             val consumedFrac by animateFloatAsState(
-                                targetValue = (day.caloriesConsumed / maxVal).coerceIn(0f, 1f)+0.05f,
+                                targetValue = (day.caloriesConsumed / maxVal).coerceIn(0f, 1f) + 0.05f,
                                 animationSpec = tween(600),
                                 label = "consumed"
                             )
@@ -257,10 +299,72 @@ fun WeeklyCalorieChart(data: List<WeekDaySummary>) {
                                     .fillMaxHeight(consumedFrac)
                                     .background(Orange, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                             )
-                            Spacer(Modifier.width(gap))
-                            // Burned bar (animated)
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        if (selectedIndex == index) {
+                            Text("${day.caloriesConsumed.toInt()}", color = Orange, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        } else {
+                            Text(day.dayLabel, color = TextGrey, fontSize = 10.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WeeklyBurnedChart(data: List<WeekDaySummary>) {
+    Card(
+        modifier  = Modifier.fillMaxWidth(),
+        shape     = RoundedCornerShape(16.dp),
+        colors    = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Weekly Burned",
+                color      = TextWhite,
+                fontWeight = FontWeight.SemiBold,
+                fontSize   = 14.sp
+            )
+            Spacer(Modifier.height(8.dp))
+
+            if (data.isEmpty()) {
+                Text("No data yet", color = TextGrey, fontSize = 12.sp)
+                return@Column
+            }
+
+            val maxVal = data.maxOf { it.caloriesBurned }.coerceAtLeast(1f)
+            val chartHeight = 80.dp
+            val barWidth    = 24.dp
+
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment     = Alignment.Bottom
+            ) {
+                var selectedIndex by remember { mutableStateOf(-1) }
+
+                data.forEachIndexed { index, day ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier            = Modifier
+                            .weight(1f)
+                            .clickable(
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                selectedIndex = if (selectedIndex == index) -1 else index
+                            }
+                    ) {
+                        Row(
+                            verticalAlignment     = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier              = Modifier.height(chartHeight)
+                        ) {
                             val burnedFrac by animateFloatAsState(
-                                targetValue = (day.caloriesBurned / maxVal).coerceIn(0f, 1f)+0.05f,
+                                targetValue = (day.caloriesBurned / maxVal).coerceIn(0f, 1f) + 0.05f,
                                 animationSpec = tween(600),
                                 label = "burned"
                             )
@@ -272,7 +376,11 @@ fun WeeklyCalorieChart(data: List<WeekDaySummary>) {
                             )
                         }
                         Spacer(Modifier.height(4.dp))
-                        Text(day.dayLabel, color = TextGrey, fontSize = 10.sp)
+                        if (selectedIndex == index) {
+                            Text("${day.caloriesBurned.toInt()}", color = Green, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        } else {
+                            Text(day.dayLabel, color = TextGrey, fontSize = 10.sp)
+                        }
                     }
                 }
             }
